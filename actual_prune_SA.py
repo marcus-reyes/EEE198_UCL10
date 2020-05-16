@@ -7,7 +7,6 @@ import time
 import os
 import copy
 from environment import PruningEnv
-from REINFORCE_agent import REINFORCE_agent
 from models_to_prune import *
 from utilities import *
 import os
@@ -20,7 +19,7 @@ import argparse
 parser = argparse.ArgumentParser(description='Arguments for masker')
 parser.add_argument('--criterion', type=str, default='mag',
                     help='criterion to use')
-parser.add_argument('--foldername', type=str, default = 'trash',
+parser.add_argument('--foldername', type=str, default = 'masked_may_exp',
                     help='folder to store masked networks in')
 parser.add_argument('--ratio_prune', type=float, default = 0.5,
                     help='amount to prune')
@@ -141,9 +140,10 @@ def actual_prune(path_from, path_to):
     print("successfulsave")
 
 
-
+if not os.path.exists('pruned_may_exp'):
+    os.makedirs('pruned_may_exp')
 ###actual_prune(path_from, path_to)
-actual_prune('masked_may_12/SA0.7_20_rand.pth', 'pruned/SA0.7_20_rand_pruned.pth')
+actual_prune('masked_may_exp/SA0.9_6_.pth', 'pruned_may_exp/SA0.9_6_pruned.pth')
 
 
 exit()

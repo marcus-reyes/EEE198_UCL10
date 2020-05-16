@@ -19,7 +19,7 @@ import torchvision.transforms as transforms
 import models_to_prune
 
 
-class RandSubnet():
+class PrunedSubnet():
     '''Handles rand-init equivalent of pruned networks.
     '''
     def __init__(self,filter_counts, model_type='basic', layer_count=4):
@@ -36,7 +36,7 @@ class RandSubnet():
         '''Builds the rand-init-ed subnet. 
         '''
         if self.model_type.lower() == 'basic' :
-            self.model = models_to_prune.RandBasicCNN(self.filter_counts)
+            self.model = models_to_prune.PrunedBasicCNN(self.filter_counts)
             self.model = self.model.to(self.device)
             self.optimizer = optimizer = optim.SGD(self.model.parameters(), lr = 0.1, momentum=0.9, weight_decay=1e-4)
         else:
@@ -93,7 +93,7 @@ class RandSubnet():
         total = 0 # total number of labels
         correct = 0 # total correct preds
 
-        logging.info('Evaluating RandCNN model''')
+        logging.info('Evaluating PrunedCNN model''')
         with torch.no_grad():
             for test_data in test_dl:
                 inputs, labels = test_data

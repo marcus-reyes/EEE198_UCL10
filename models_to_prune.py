@@ -94,7 +94,7 @@ class BasicCNNMnist(nn.Module):
 
         return x
 
-class RandBasicCNN(nn.Module):
+class PrunedBasicCNN(nn.Module):
     '''Rand-init equiv of BasicCNN
     '''
     def __init__(self,filter_counts):
@@ -102,7 +102,7 @@ class RandBasicCNN(nn.Module):
         L1_filters, L2_filters, L3_filters, L4_filters = filter_counts
         # number of filters per layer depends on how much was pruned
         logging.info('Rand-Subnet Filters: {}'.format(filter_counts))
-        super(RandBasicCNN, self).__init__()
+        super(PrunedBasicCNN, self).__init__()
         self.conv1 = nn.Conv2d(3, L1_filters,3,stride=2)
         self.conv2 = nn.Conv2d(L1_filters,L2_filters,3)
         self.conv3 = nn.Conv2d(L2_filters,L3_filters,3,stride=2)

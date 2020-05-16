@@ -819,9 +819,9 @@ class PruningEnv:
         #                                        '/partially_trained_3.pt',
         #                                        map_location = self.device))
         self.model.load_state_dict(torch.load(os.getcwd() + \
-                                                '/init_may_10_num_1.pth')['state_dict'])
+                 '/unconverged_models\init_may_10_num_1.pth')['state_dict'])
         self.optimizer.load_state_dict(torch.load(os.getcwd() + \
-                                    '/init_may_10_num_1.pth')['optim'])
+                 '/unconverged_models\init_may_10_num_1.pth')['optim'])
         # initialize starting layer to process
         self.layer = self.layers_to_prune[0]
         # initialize prune amounts to zer

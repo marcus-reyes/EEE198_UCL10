@@ -4,12 +4,11 @@ import time
 import os
 import copy
 from environment import PruningEnv
-from REINFORCE_agent import REINFORCE_agent
 import os
 import logging
 import numpy as np
 from torch.utils.tensorboard import SummaryWriter
-from utilities import RandSubnet
+from utilities import PrunedSubnet
 import torch
 
 import argparse
@@ -17,7 +16,7 @@ import argparse
 parser = argparse.ArgumentParser(description='Arguments for masker')
 parser.add_argument('--criterion', type=str, default='mag',
                     help='criterion to use')
-parser.add_argument('--foldername', type=str, default = 'trash',
+parser.add_argument('--foldername', type=str, default = 'pruned_may_exp',
                     help='folder to store masked networks in')
 parser.add_argument('--ratio_prune', type=float, default = 0.5,
                     help='amount to prune')
@@ -34,19 +33,14 @@ env = PruningEnv()
 criterion = args.criterion
 inv_flag = args.inv_flag
 folder = '/'+ args.foldername + '/'
-if inv_flag == True:
-    PATH = os.getcwd() + str(folder) + 'pruned_inv/' + str(criterion) + '_inv_pruned_2.pth'
-    print("Using inverted criterion")
-else:
-    PATH = os.getcwd() + str(folder) + 'pruned/' + str(criterion) + '_pruned_2.pth'
-    print("Using NON-inverted criterion")
 
-PATH = os.getcwd() + '/pruned/SA0.7_20_rand_pruned.pth'
+
+PATH = os.getcwd() + folder + 'SA0.9_6_pruned.pth'
 model_dicts = torch.load(PATH)
 
 filters_per_layer = model_dicts['filters_per_layer']
 #filters_per_layer = [64,128,256,512]
-pruned_subnet = RandSubnet(filter_counts = filters_per_layer)
+pruned_subnet = PrunedSubnet(filter_counts = filters_per_layer)
 pruned_subnet.build()
 for name, param in pruned_subnet.model.named_modules():
     print("N,P", name, param)
@@ -55,14 +49,11 @@ pruned_subnet.model.load_state_dict(model_dicts['state_dict'])
 
 val_acc = pruned_subnet.evaluate(env.test_dl)
 print(val_acc)
-if inv_flag == True:
-    writer = SummaryWriter('runs_' + str(folder) + str(criterion) + '_inv_pruned_2')
-else:
-    writer = SummaryWriter('runs_' + str(folder) + str(criterion) + '_pruned_2')
+
     
 writer = SummaryWriter('runs_may_12_70_exp_20_trained')
 start = time.time()
-for n_iter in range(85):
+for n_iter in range(0):
     if n_iter in ([25,55]):
         for param_group in pruned_subnet.optimizer.param_groups:
             param_group['lr'] *= 0.1
@@ -79,12 +70,11 @@ print(val_acc)
 total_time = end - start
 print(total_time)
 
-if inv_flag == True:
-    PATH = os.getcwd() + str(folder) + 'trained_inv/' + str(criterion) + '_inv_pruned_trained_2.pth'
 
-else:
-    PATH = os.getcwd() + str(folder) + 'trained/' + str(criterion) + '_pruned_trained_2.pth'
-PATH = os.getcwd() + '/SA0.7_20_rand_pruned_trained_90ep.pth'
+if not os.path.exists('trained_may_exp'):
+    os.makedirs('trained_may_exp')
+
+PATH = os.getcwd() + '/trained_may_exp/SA0.9_6_pruned_trained_90ep.pth'
 model_dicts = {'state_dict': pruned_subnet.model.state_dict(),
         'optim': pruned_subnet.optimizer.state_dict(),
         'filters_per_layer': filters_per_layer}

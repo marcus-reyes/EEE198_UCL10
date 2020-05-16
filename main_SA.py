@@ -6,7 +6,6 @@ import os
 import copy
 import math
 from environment import PruningEnv
-from REINFORCE_agent import REINFORCE_agent
 import os
 import logging
 import numpy as np
@@ -110,8 +109,13 @@ closed_q.append(current_mask)
 
 
 ###LogFile
+###Create directory if it doesn't exist
+if not os.path.exists('textlogs'):
+    os.makedirs('textlogs')
+    
+
 ###Pre-run data
-log_file = open("test_may_" + str(date) + "_exp_" + str(xp_num_) + ".txt", "w")
+log_file = open("textlogs/test_may_" + str(date) + "_exp_" + str(xp_num_) + ".txt", "w")
 log_file.write(os.getcwd() + '/masked_may_12/SA' + str(ratio_prune) + '_' + str(xp_num_) + '_' + str(description) + '.pth\n')
 log_file.write("Hyperparameters\n")
 log_file.write(str("acc_temp: " + str(acc_temp) +  "\n"))
@@ -228,7 +232,7 @@ while (stop_flag == True):
 
     z += 1  
     #If last iteration break loop
-    if z == 1000:
+    if z == 10:
 
         stop_flag = False
 
@@ -281,6 +285,10 @@ print(total)
 
 
 
+###Create folder if it does not exist
+if not os.path.exists('masked_may_exp'):
+    os.makedirs('masked_may_exp')
+
 
 ###Save into .pth
 PATH = os.getcwd() + '/masked_may_exp/SA' + str(ratio_prune) + '_' + str(xp_num_) + '_.pth'
@@ -307,7 +315,7 @@ writer.close()
 
 
 ###Post-run data
-log_file = open("test_may_" + str(date) + "_exp_" + str(xp_num_) + ".txt", "a")
+log_file = open("textlogs/test_may_" + str(date) + "_exp_" + str(xp_num_) + ".txt", "a")
 log_file.write(str("up_steps: " + str(up_steps) + "\n"))
 log_file.write(str("down_steps: " + str(down_steps) + "\n"))
 log_file.write(str("no_steps: " + str(no_steps) + "\n"))
