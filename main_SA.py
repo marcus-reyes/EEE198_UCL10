@@ -17,7 +17,7 @@ import argparse
 
 from collections import deque
 
-xp_num_ = 6
+xp_num_ = 700
 date = 15
 ###Word description for marking the run labels in tensorboard
 ###Do not use anything other than letters, numbers, and _. "." messes with tensorboard
@@ -30,7 +30,7 @@ writer = SummaryWriter(('runs_SA_may_15/experiment_0_7_rand' + str(xp_num_) + st
 parser = argparse.ArgumentParser(description='Arguments for masker')
 parser.add_argument('--foldername', type=str, default = 'trash',
                     help='folder to store masked networks in')
-parser.add_argument('--ratio_prune', type=float, default = 0.9,
+parser.add_argument('--ratio_prune', type=float, default = 0.7,
                     help='amount to prune')
 parser.add_argument('--num_batches', type=int, default = 1,
                     help='number of batches for the forward pass')
@@ -232,7 +232,7 @@ while (stop_flag == True):
 
     z += 1  
     #If last iteration break loop
-    if z == 10:
+    if z == 1:
 
         stop_flag = False
 
@@ -247,6 +247,8 @@ print("Last tried (not accepted) mask has ", final_acc)
 idx = 0
 total_pruned = 0
 env.reset_to_init_1()
+
+    
 for i in range(len(size_of_layer)):
     env.layer = env.layers_to_prune[i]
     layer_mask = current_mask[idx:idx+size_of_layer[i]].clone()
@@ -288,6 +290,10 @@ print(total)
 ###Create folder if it does not exist
 if not os.path.exists('masked_may_exp'):
     os.makedirs('masked_may_exp')
+
+layer_weights_dict, num_weights, layer_flops_dict, num_flops = \
+    compute_weights_and_flops(get_network_def_from_model(env.model, [3,32,32]))
+
 
 
 ###Save into .pth
@@ -332,6 +338,7 @@ log_file.write(str("Final forwardpass accuracy: " + str(final_forpass) + "\n"))
 log_file.write(str("Time taken in seconds: " + str(elapsed_time) + "\n"))
 log_file.close()
 
+print("weights and flops",num_weights, num_flops)
 
 
 

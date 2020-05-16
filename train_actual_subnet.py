@@ -35,7 +35,7 @@ inv_flag = args.inv_flag
 folder = '/'+ args.foldername + '/'
 
 
-PATH = os.getcwd() + folder + 'SA0.9_6_pruned.pth'
+PATH = os.getcwd() + folder + 'SA0.7_7_pruned.pth'
 model_dicts = torch.load(PATH)
 
 filters_per_layer = model_dicts['filters_per_layer']
@@ -50,16 +50,18 @@ pruned_subnet.model.load_state_dict(model_dicts['state_dict'])
 val_acc = pruned_subnet.evaluate(env.test_dl)
 print(val_acc)
 
-    
-writer = SummaryWriter('runs_may_12_70_exp_20_trained')
+best_val_acc = 0
+writer = SummaryWriter('runs_training_may_exp/experiment_7')
 start = time.time()
-for n_iter in range(0):
-    if n_iter in ([25,55]):
+for n_iter in range(90):
+    if n_iter in ([30,60]):
         for param_group in pruned_subnet.optimizer.param_groups:
             param_group['lr'] *= 0.1
     print("EPOCH",n_iter)
     pruned_subnet.train_model(env.train_dl, num_epochs = 1)
     val_acc = pruned_subnet.evaluate(env.test_dl)
+    if val_acc > best_val_acc:
+        best_val_acc = val_acc
     print(val_acc)
     writer.add_scalar('Test/train', val_acc, n_iter)
 
@@ -69,12 +71,12 @@ val_acc = pruned_subnet.evaluate(env.test_dl)
 print(val_acc)
 total_time = end - start
 print(total_time)
-
+print(best_val_acc)
 
 if not os.path.exists('trained_may_exp'):
     os.makedirs('trained_may_exp')
 
-PATH = os.getcwd() + '/trained_may_exp/SA0.9_6_pruned_trained_90ep.pth'
+PATH = os.getcwd() + '/trained_may_exp/SA0.7_7_pruned_trained_90ep.pth'
 model_dicts = {'state_dict': pruned_subnet.model.state_dict(),
         'optim': pruned_subnet.optimizer.state_dict(),
         'filters_per_layer': filters_per_layer}
