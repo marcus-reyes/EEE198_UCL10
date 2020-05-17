@@ -18,7 +18,7 @@ import argparse
 
 from collections import deque
 
-xp_num_ = 700
+xp_num_ = 1
 date = 15
 # Word description for marking the run labels in tensorboard
 # Do not use anything other than letters, numbers, and _. "."
@@ -51,9 +51,6 @@ parser.add_argument(
     "--max_temp_changes", type=int, default=2, help="maximum temp levels"
 )
 args = parser.parse_args()
-
-# ratio_prune = args.ratio_prune
-# test_set_batches = args.num_batches
 
 # Initialize model to be pruned and corresponding methods
 env = PruningEnv()
@@ -305,7 +302,6 @@ model_dicts = {
 }
 torch.save(model_dicts, PATH)
 
-
 ###Sanity checks at the end
 final_acc = env._evaluate_model()
 final_forpass = env.forward_pass(args.num_batches)
@@ -314,7 +310,6 @@ print("Final forward pass is ", final_forpass)
 elapsed_time = time.time() - start_time
 print("Elapsed time is", elapsed_time)
 writer.close()
-
 
 ###Post-run data
 log_file = open(
