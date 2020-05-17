@@ -6,7 +6,7 @@ import os
 import copy
 import math
 from environment import PruningEnv
-from REINFORCE_agent import REINFORCE_agent
+#from REINFORCE_agent import REINFORCE_agent
 import os
 import logging
 import numpy as np

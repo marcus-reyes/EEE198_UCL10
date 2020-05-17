@@ -73,6 +73,8 @@ total_iter_count = 0  # iters including multiple loops within a temp change
 ave_acc = 5
 accs = [ave_acc]
 best_ave_acc = ave_acc
+if not os.path.exists("masked_may_exp"):
+    os.makedirs("masked_may_exp")
 BEST_AVE_PATH = (
     os.getcwd()
     + "/masked_may_exp/SA"
@@ -106,7 +108,7 @@ temp = 0.005
 temp_decay = 0.995
 
 # HYPERPARAMS: iterations within a temperature value
-iter_per_temp = 1  # allows multiple decisions per given temp value
+iter_per_temp = 2  # allows multiple decisions per given temp value
 iter_multiplier = 1.005  # increase iters for every temp decrease
 max_iter_per_temp = 10  # ceiling on iterations per temp value
 
@@ -259,16 +261,8 @@ for i, item in enumerate(layer_mask):
     num_per_layer.append(int(item.sum().item()))
 
 print("Filters per layer:", num_per_layer)
-total = 0
-for item in num_per_layer:
-    total += item
+print("Total", sum(num_per_layer))
 
-print("Total", total)
-
-
-###Create folder if it does not exist
-if not os.path.exists("masked_may_exp"):
-    os.makedirs("masked_may_exp")
 
 (
     layer_weights_dict,
@@ -299,7 +293,7 @@ torch.save(model_dicts, PATH)
 ###Sanity checks at the end
 final_acc = env._evaluate_model()
 final_forpass = env.forward_pass(args.num_batches)
-print("Final accuracy is ", final_acc)
+print("Final accuracy is ", final_acc.item())
 print("Final forward pass is ", final_forpass)
 elapsed_time = time.time() - start_time
 print("Elapsed time is", elapsed_time)
@@ -322,7 +316,7 @@ log_file.write(str("final_structure: " + str(num_per_layer) + "\n"))
 
 
 log_file.write(
-    str("last_ave_acc: (NOT NECESSARILY THE ACTUAL ACC): " + str(accs) + "\n")
+    str("last_ave_acc: (NOT NECESSARILY ACTUAL ACC): " + str(ave_acc) + "\n")
 )
 log_file.write(str("evaluated accuracy: " + str(final_acc) + "\n"))
 log_file.write(str("Final forwardpass accuracy: " + str(final_forpass) + "\n"))
