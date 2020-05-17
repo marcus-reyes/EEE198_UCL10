@@ -117,9 +117,6 @@ def step_from(mask, num_to_flip = 2):
     one_indices_old = torch.nonzero(mask).squeeze()
     zero_indices_old = torch.nonzero((mask == 0)).squeeze()
 
-    print("Num_to_flip", num_to_flip)
-    print("zero_indices_old", zero_indices_old.shape[0])
-    print("one_indices_old", one_indices_old.shape[0])
     these_zeros = torch.randperm(zero_indices_old.shape[0])[:num_to_flip]
     these_ones = torch.randperm(one_indices_old.shape[0])[:num_to_flip]
     
@@ -134,15 +131,16 @@ def step_from(mask, num_to_flip = 2):
     
     return new_mask
     
-def is_in_list(new_mask, masklist):
-    is_in_list_flag = 0
-    for elem in masklist:
+def is_in_memory(new_mask, mask_memory):
+    is_in_mem_flag = 0
+    for elem in mask_memory:
         if torch.all(torch.eq(new_mask,elem)):
-            is_in_list_flag = 1
+            is_in_mem_flag = 1
             break
         else:
             pass
-    return is_in_list_flag
+    return is_in_mem_flag
+
 def extract_feature_map_sizes(model, input_data_shape, device = None):
     ''' Hook to get conv and fc layerwise feat map sizes
 
