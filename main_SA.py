@@ -56,35 +56,39 @@ args = parser.parse_args()
 env = PruningEnv()
 env.reset_to_init_1()
 
-# Obtain conv layers of the model and it's size
-total_filters_count = 0
-size_of_layer = []
-for name, param in env.model.named_parameters():
-    if "conv" in name and "weight" in name:
-        total_filters_count += param.shape[0]
-        size_of_layer.append(param.shape[0])
-
 # Setting the initial mask and its sparsity
-rand_values = torch.rand((total_filters_count))
+rand_values = torch.rand((env.total_filters))
 mask_rank = torch.topk(
     rand_values, int(rand_values.shape[0] * args.ratio_prune), largest=False
 )
-mask = torch.ones((total_filters_count))
+mask = torch.ones((env.total_filters))
 mask[mask_rank[1]] = 0
 current_mask = mask
 
 # Iteration variables
-temp_changes = 0  # counter accept temp changes 
+temp_changes = 0  # counter accept temp changes
 total_iter_count = 0  # iters including multiple loops within a temp change
 
 # Model accuracy variables
 ave_acc = 5
 accs = [ave_acc]
+best_ave_acc = ave_acc
+BEST_AVE_PATH = (
+    os.getcwd()
+    + "/masked_may_exp/SA"
+    + str(args.ratio_prune)
+    + "_"
+    + str(xp_num_)
+    + "_best_ave_acc.pth"
+)
 
 # Search step variables, for logging
-up_steps = 0  # away from local optimum
 down_steps = 0  # towards local optimum
+up_steps = 0  # away from local optimum
 no_steps = 0  # stay put
+total_down_steps = 0
+total_up_steps = 0
+total_no_steps = 0
 
 # Search memory variables
 mem_size = 60
@@ -126,12 +130,13 @@ log_file.write(
     + ".pth\n"
 )
 log_file.write("Hyperparameters\n")
+log_file.write(str("At init:\n"))
 log_file.write(str("temp: " + str(temp) + "\n"))
 log_file.write(str("temp_decay: " + str(temp_decay) + "\n"))
 log_file.write(str("iter_per_temp: " + str(iter_per_temp) + "\n"))
 log_file.write(str("iter_multiplier: " + str(iter_multiplier) + "\n"))
 log_file.write(str("max_iter_per_temp: " + str(max_iter_per_temp) + "\n"))
-log_file.write(str("ham_dist_init: " + str(ham_dist) + "\n"))
+log_file.write(str("ham_dist:" + str(ham_dist) + "\n"))
 log_file.write(str("ham_dist_decay: " + str(ham_dist_decay) + "\n"))
 log_file.write(str("mem_size: " + str(mem_size) + "\n"))
 log_file.close()
@@ -150,20 +155,9 @@ while temp_changes != args.max_temp_changes:
                 closed_q.append(new_mask)
                 break
 
-        # Tentatively implement the mask
-        idx = 0
-        total_pruned = 0
+        # Tentatively apply the mask
         env.reset_to_init_1()
-        for i in range(len(size_of_layer)):
-            env.layer = env.layers_to_prune[i]
-            layer_mask = new_mask[idx : idx + size_of_layer[i]].clone()
-            layer_mask = torch.unsqueeze(layer_mask, 0)
-            total_pruned += size_of_layer[i] - layer_mask.sum()
-
-            filters_counted, pruned_counted = env.prune_layer(layer_mask)
-            idx += size_of_layer[i]
-        amount_pruned = total_pruned
-        idx = 0
+        env.apply_mask(new_mask)
 
         # Check if keep or discard
         new_acc = env.forward_pass(args.num_batches)
@@ -177,7 +171,6 @@ while temp_changes != args.max_temp_changes:
         else:
             q = torch.rand(1).item()
             acc_prob = math.exp(-1 * acc_delta / temp)
-            print(acc_prob, "Acc_prob")
             if q < acc_prob:
                 up_steps += 1
                 current_mask = new_mask
@@ -187,13 +180,18 @@ while temp_changes != args.max_temp_changes:
                 no_steps += 1
     accs = [ave_acc]
 
+    # update post_run log_file variables
+    total_down_steps += down_steps
+    total_up_steps += up_steps
+    total_no_steps += no_steps
+
     # Logging progress on stdout
     elapsed_time = time.time() - start_time
     print("-------------------------------------------------")
     print("TIME", time.strftime("%H:%M:%S", time.gmtime(elapsed_time)))
     print("ITER:", total_iter_count)
     print("TEMP CHANGES:", temp_changes)
-    print("\tAVE ACC:", accs[0])
+    print("\tAVE ACC:", ave_acc)
     print(
         "\tSTEPS down-up-no: {:.2f}% - {:.2f}% - {:.2f}%".format(
             (down_steps / int(iter_per_temp)) * 100,
@@ -211,7 +209,7 @@ while temp_changes != args.max_temp_changes:
     writer.add_scalar("new_acc", new_acc, temp_changes)
     writer.add_scalar("iter_per_temp", int(iter_per_temp), temp_changes)
     writer.add_scalar("ham_dist", ham_dist, temp_changes)
-    writer.add_scalar("amount_pruned", amount_pruned, temp_changes)
+    #writer.add_scalar("amount_pruned", amount_pruned, temp_changes)
 
     # Schedulers of Neighbor Size, temperature, and iters per temp
     ham_dist = max(1, int(ham_dist * ham_dist_decay))
@@ -221,36 +219,34 @@ while temp_changes != args.max_temp_changes:
     temp = temp * temp_decay
     iter_per_temp = min(max_iter_per_temp, iter_per_temp * iter_multiplier)
 
+    # Checkpoint
+    if ave_acc > best_ave_acc:
+        torch.save(
+            {
+                "untrained_state_dict": env.model.state_dict(),
+                "heur_mask": current_mask,  
+                "ave_acc": ave_acc,
+                "iter": total_iter_count,
+            },
+            BEST_AVE_PATH,
+        )
+        best_ave_acc = ave_acc
+
     temp_changes += 1
+
 
 print("\n---------------- End of SA Search ---------------\n")
 
 
-final_acc = env._evaluate_model()
-print("Last tried (not accepted) mask has ", final_acc)
+# Prune with the last ACCEPTED mask
 
-###Prune with the last ACCEPTED mask
-###Apply the last mask accepted
-idx = 0
-total_pruned = 0
+# Apply the last mask accepted
 env.reset_to_init_1()
-
-for i in range(len(size_of_layer)):
-    env.layer = env.layers_to_prune[i]
-    layer_mask = current_mask[idx : idx + size_of_layer[i]].clone()
-    layer_mask = torch.unsqueeze(layer_mask, 0)
-    total_pruned += size_of_layer[i] - layer_mask.sum()
-
-    ###prune current layer
-    filters_counted, pruned_counted = env.prune_layer(layer_mask)
-    idx += size_of_layer[i]
-
-amount_pruned = total_pruned
-idx = 0
+env.apply_mask(current_mask)
 
 ###Check the amount per layer
 ###Record the per layer_mask
-layer_mask = []  # list
+layer_mask = []
 num_per_layer = []
 for module in env.model.modules():
     # for conv2d obtain the filters to be kept.
@@ -260,16 +256,14 @@ for module in env.model.modules():
         layer_mask.append(filter_mask)
 
 for i, item in enumerate(layer_mask):
-    ###Have to use.item for singular element tensors to extract the element
-    ###Have to use int()
     num_per_layer.append(int(item.sum().item()))
 
-print(num_per_layer)
+print("Filters per layer:", num_per_layer)
 total = 0
 for item in num_per_layer:
     total += item
 
-print(total)
+print("Total", total)
 
 
 ###Create folder if it does not exist
@@ -315,12 +309,15 @@ writer.close()
 log_file = open(
     "textlogs/test_may_" + str(date) + "_exp_" + str(xp_num_) + ".txt", "a"
 )
-log_file.write(str("up_steps: " + str(up_steps) + "\n"))
-log_file.write(str("down_steps: " + str(down_steps) + "\n"))
-log_file.write(str("no_steps: " + str(no_steps) + "\n"))
+total_down_steps = total_down_steps / total_iter_count
+total_up_steps = total_up_steps / total_iter_count
+total_no_steps = total_no_steps / total_iter_count
+log_file.write(str("down_steps: " + str(total_down_steps) + "\n"))
+log_file.write(str("up_steps: " + str(total_up_steps) + "\n"))
+log_file.write(str("no_steps: " + str(total_no_steps) + "\n"))
 log_file.write(str("num_iterations: " + str(total_iter_count) + "\n"))
 log_file.write(str("temps_tried: " + str(temp_changes) + "\n"))
-log_file.write(str("num_batches: " + str(10) + "\n"))
+log_file.write(str("num_batches: " + str(args.num_batches) + "\n"))
 log_file.write(str("final_structure: " + str(num_per_layer) + "\n"))
 
 

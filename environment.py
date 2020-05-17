@@ -43,6 +43,8 @@ class PruningEnv:
         layers_to_prune ([str,]): layer names for iterating among layers to
             be masked
         layer (str): layer name of current layer that is being operated on
+        layer_filters ([int,]): number of filters in conv layers
+        total_filters (int): total number of filters in the model
         layer_prune_amounts ({layer_name:num_channel}): for network parameter
             measurements
         layer_flops ({layer_name:flops}): for network flops estimations
@@ -65,6 +67,14 @@ class PruningEnv:
         # Build chosen model to prune
         self.model_type = model_type
         self.model = self._build_model_to_prune().to(self.device)
+
+        # Obtain conv layers of the model and it's size
+        self.total_filters = 0
+        self.layer_filters = []
+        for name, param in self.model.named_parameters():
+            if "conv" in name and "weight" in name:
+                self.total_filters += param.shape[0]
+                self.layer_filters.append(param.shape[0])
 
         # logging.info("Starting Pre-Training")
         # set training parameters
@@ -286,12 +296,7 @@ class PruningEnv:
         self.prev_out_feat = [out_h, out_w]
 
         original_layer_flops = (
-            C_out
-            * (C_in / groups) 
-            * kernel_h 
-            * kernel_w 
-            * out_h 
-            * out_w
+            C_out * (C_in / groups) * kernel_h * kernel_w * out_h * out_w
         )
         pruned_layer_flops = (
             (C_out - amount_pruned)
@@ -346,19 +351,19 @@ class PruningEnv:
         return bn_rep
 
     def updateBN(self):  # jeff: default model is the global model
-        """Taken from https://github.com/RICE-EIC/Early-Bird-Tickets 
-            A way of implementing the Batch Norm regularization
-                proposed by Network Slimming
-           
-            Returns:
-                Nothing. Updates the .grad of the desired parameters.
-                To be used just before optimizer.step()
+        """Taken from https://github.com/RICE-EIC/Early-Bird-Tickets
+        A way of implementing the Batch Norm regularization
+            proposed by Network Slimming
+
+        Returns:
+            Nothing. Updates the .grad of the desired parameters.
+            To be used just before optimizer.step()
         """
 
         for m in self.model.modules():
             if isinstance(m, nn.BatchNorm2d):
                 # L1
-                m.weight.grad.data.add_(0.0001 * torch.sign(m.weight.data))  
+                m.weight.grad.data.add_(0.0001 * torch.sign(m.weight.data))
 
     def _train_model(self, num_epochs=10):
         """Trains the model being pruned
@@ -459,12 +464,10 @@ class PruningEnv:
                 pred = output.argmax(dim=1, keepdim=True)
                 correct += pred.eq(target.view_as(pred)).sum().item()
 
-        return (
-            100.0 * correct / (num_of_batches * self.valid_dl.batch_size)
-        )
+        return 100.0 * correct / (num_of_batches * self.valid_dl.batch_size)
 
     def maskbuildbias(self, indices, num_filters):
-        """Builds a mask for the bias of the layer to be pruned. 
+        """Builds a mask for the bias of the layer to be pruned.
 
         Sub function of prune_layer.
 
@@ -473,7 +476,7 @@ class PruningEnv:
             num_filters (int): total filters on the layer
 
         Returns:
-            bias_mask (tensor): mask vector of binary values 
+            bias_mask (tensor): mask vector of binary values
 
         """
         bias_mask = copy.copy(indices[0, :num_filters])
@@ -483,20 +486,20 @@ class PruningEnv:
 
     def maskbuildweight(self, indices, kernel1, kernel2, num_filters):
         """Builds a mask for the weights of the layer to be pruned.
-            Layer to be pruned is defined by self.layer
-            
-            Sub function of prune_layer
+        Layer to be pruned is defined by self.layer
 
-            Args:
-                indices (list): indices to be pruned i.e.
-                    [0,1,1,0,0,1,1,0,1,0...]
-                kernel1 (int): Dimension 1 of the kernel
-                kernel2 (int): Dimension 2 of the kernel
-                num_filters (int): Number of filters in the layer being pruned
+        Sub function of prune_layer
 
-            Returns:
-                weight_mask (tensor): 3-D mask that zeros out the corresponding 
-                parameters of the filters to be pruned
+        Args:
+            indices (list): indices to be pruned i.e.
+                [0,1,1,0,0,1,1,0,1,0...]
+            kernel1 (int): Dimension 1 of the kernel
+            kernel2 (int): Dimension 2 of the kernel
+            num_filters (int): Number of filters in the layer being pruned
+
+        Returns:
+            weight_mask (tensor): 3-D mask that zeros out the corresponding
+            parameters of the filters to be pruned
         """
 
         weight_mask = copy.copy(indices[0, :num_filters]).view(-1, 1, 1)
@@ -508,21 +511,21 @@ class PruningEnv:
     def maskbuildweight2(
         self, prev_indices, kernel1, kernel2, num_filters_prev
     ):
-        """Builds a mask for the weights of the next layer. 
-            Sub function of prune_layer
-            Necessity from the succeeding layer's having
-            less output feature maps
-            Args:
-                indices (list): indices to be pruned i.e 
-                    [0,1,1,0,0,1,1,0,1,0...]
-                kernel1 (int): Dimension 1 of the kernel
-                kernel2 (int): Dimension 2 of the kernel
-                num_filters (int): Number of filters in the layer being prune
-            Returns:
-                next_weight_mask (tensor): 3-D mask that zeros out the
-                corresponding parameters of the NEXT layer since pruning the
-                current layer will result in less feature maps for
-                the next layer.
+        """Builds a mask for the weights of the next layer.
+        Sub function of prune_layer
+        Necessity from the succeeding layer's having
+        less output feature maps
+        Args:
+            indices (list): indices to be pruned i.e
+                [0,1,1,0,0,1,1,0,1,0...]
+            kernel1 (int): Dimension 1 of the kernel
+            kernel2 (int): Dimension 2 of the kernel
+            num_filters (int): Number of filters in the layer being prune
+        Returns:
+            next_weight_mask (tensor): 3-D mask that zeros out the
+            corresponding parameters of the NEXT layer since pruning the
+            current layer will result in less feature maps for
+            the next layer.
         """
         next_weight_mask = copy.copy(prev_indices[0, :num_filters_prev])
         next_weight_mask = next_weight_mask.view(-1, 1, 1)
@@ -532,20 +535,20 @@ class PruningEnv:
         return next_weight_mask.to(self.device)
 
     def prune_layer(self, indices):
-        """ Masks the current layer (self.layer) being handled by the env.
+        """Masks the current layer (self.layer) being handled by the env.
 
-            This also masks the succeeding layer as pruning the current layer
-                will result in less feature maps for the next layer
-            The corresponding Batch Norm parameters are also zero-ed out to
-                ensure that only zeros will be passed on to the next layer.
-                In the case of the last Conv layer.
+        This also masks the succeeding layer as pruning the current layer
+            will result in less feature maps for the next layer
+        The corresponding Batch Norm parameters are also zero-ed out to
+            ensure that only zeros will be passed on to the next layer.
+            In the case of the last Conv layer.
 
-            Args:
-                indices (list): indices to be pruned i.e.
-                    [0,1,1,1,0,0,0,1,0,...]; 1 means retained; 0 means pruned
-            Returns:
-                total_filters (int): total amount of filters in the layer
-                amt_pruned (int): amount of filters pruned in the layer
+        Args:
+            indices (list): indices to be pruned i.e.
+                [0,1,1,1,0,0,0,1,0,...]; 1 means retained; 0 means pruned
+        Returns:
+            total_filters (int): total amount of filters in the layer
+            amt_pruned (int): amount of filters pruned in the layer
         """
 
         iter_ = 0
@@ -648,16 +651,32 @@ class PruningEnv:
 
         return total_filters, amt_pruned
 
+    def apply_mask(self, new_mask):
+        """Apply new_mask on all the conv layers of the model"""
+
+        idx = 0
+        for layer_name, filter_count in zip(
+            self.layers_to_prune, self.layer_filters
+        ):
+            self.layer = layer_name
+            layer_mask = new_mask[idx : idx + filter_count].clone()
+            layer_mask = torch.unsqueeze(layer_mask, 0)
+
+            filters_counted, pruned_counted = self.prune_layer(layer_mask)
+            idx += filter_count
+
     def reset_to_k(self):
         """Resets CNN to partially trained net w/ full params"""
 
         self.model.load_state_dict(
-            torch.load(os.getcwd() 
-                + "/april_experiments_withBN_epoch_5.pth")["state_dict"]
+            torch.load(os.getcwd() + "/april_experiments_withBN_epoch_5.pth")[
+                "state_dict"
+            ]
         )
         self.optimizer.load_state_dict(
-            torch.load(os.getcwd() 
-                + "/april_experiments_withBN_epoch_5.pth")["optim"]
+            torch.load(os.getcwd() + "/april_experiments_withBN_epoch_5.pth")[
+                "optim"
+            ]
         )
 
         # initialize starting layer to process
