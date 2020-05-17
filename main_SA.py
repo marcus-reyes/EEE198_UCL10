@@ -17,13 +17,13 @@ import argparse
 
 from collections import deque
 
-xp_num_ = 700
+xp_num_ = 1
 date = 15
 ###Word description for marking the run labels in tensorboard
 ###Do not use anything other than letters, numbers, and _. "." messes with tensorboard
 
 description = "90_sparse_large_ham_init_1"
-writer = SummaryWriter(('runs_SA_may_15/experiment_0_7_rand' + str(xp_num_) + str(description)))
+writer = SummaryWriter(('runs_SA_may_exp/experiment_0_7_rand' + str(xp_num_) + str(description)))
 
 
 ###Argument parsing
@@ -34,6 +34,7 @@ parser.add_argument('--ratio_prune', type=float, default = 0.7,
                     help='amount to prune')
 parser.add_argument('--num_batches', type=int, default = 1,
                     help='number of batches for the forward pass')
+                    
 
 
 
@@ -56,7 +57,8 @@ for name, param in env.model.named_parameters():
 
 ###Setting the initial mask sparsity as well as the initial mask
 rand_values = torch.rand((total_filters_count))
-mask_rank = torch.topk(rand_values,int(rand_values.shape[0]*ratio_prune),largest = False)
+mask_rank = torch.topk(\
+    rand_values,int(rand_values.shape[0]*ratio_prune),largest = False)
 mask = torch.ones((total_filters_count))
 mask[mask_rank[1]] = 0
 current_mask = mask
@@ -115,8 +117,11 @@ if not os.path.exists('textlogs'):
     
 
 ###Pre-run data
-log_file = open("textlogs/test_may_" + str(date) + "_exp_" + str(xp_num_) + ".txt", "w")
-log_file.write(os.getcwd() + '/masked_may_12/SA' + str(ratio_prune) + '_' + str(xp_num_) + '_' + str(description) + '.pth\n')
+log_file = open("textlogs/exp_" + str(xp_num_) + ".txt", "w")
+log_file.write(os.getcwd() + '/masked_may_exp/SA_exp' + str(xp_num_) + \
+    '_sparsity_' + str(int(ratio_prune*100)) + '.pth\n')
+    
+log_file.write("Description: " + str(description) + "\n")
 log_file.write("Hyperparameters\n")
 log_file.write(str("acc_temp: " + str(acc_temp) +  "\n"))
 log_file.write(str("acc_temp_decay: " + str(acc_temp_decay)+ "\n"))
@@ -297,7 +302,8 @@ layer_weights_dict, num_weights, layer_flops_dict, num_flops = \
 
 
 ###Save into .pth
-PATH = os.getcwd() + '/masked_may_exp/SA' + str(ratio_prune) + '_' + str(xp_num_) + '_.pth'
+PATH = os.getcwd() + '/masked_may_exp/SA_exp' + str(xp_num_) + \
+    '_sparsity_' + str(int(ratio_prune*100)) + '.pth'
 model_dicts = {'state_dict': env.model.state_dict(),
         'optim': env.optimizer.state_dict(),
         'filters_per_layer': num_per_layer}
