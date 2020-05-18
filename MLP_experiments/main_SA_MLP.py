@@ -256,8 +256,8 @@ print("Trained for:", chkpt["epochs"], "epochs")
 
 
 print("\n======= ! Begin Annealing ! =======\n")
-DEVICE = "cpu"  # use CPU for annealing
-model.to(DEVICE)
+#DEVICE = "cpu"  # use CPU for annealing
+#model.to(DEVICE)
 
 # For logging and other variable initialization:
 ave_acc = 5
