@@ -5,3 +5,9 @@
 !.gitignore
 !README.md
 !*.py
+!MLP_experiments/
+
+MLP_experiments/*
+!MLP_experiments/*.py
+!MLP_experiments/*.sh
+
