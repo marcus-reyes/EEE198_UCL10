@@ -1,28 +1,31 @@
 import subprocess as sp 
 
 
-def mask_prune_train():
-    
+def mask_prune_train(xp_num_, ratio_prune):
 
-    mask_command = ['python','main_SA.py']
-            # '--criterion',str(item),
-            # '--foldername', 'comp_exp_loc_80_cifar',
-            # '--ratio_prune', '0.8']
+    
+    
+    mask_command = ['python','main_SA.py',
+            '--xp_num_' , str(xp_num_),
+            '--ratio_prune', str(ratio_prune)]
 
     sp.run(mask_command)
     
     
 
-    prune_command = ['python', 'actual_prune.py']
-                # '--foldername', 'comp_exp_loc_80_cifar']
+    prune_command = ['python', 'actual_prune.py',
+            '--xp_num_' , str(xp_num_),
+            '--ratio_prune', str(ratio_prune)]
    
     sp.run(prune_command)
     
 
-    train_command = ['python', 'train_actual_subnet.py']
-                # '--criterion', str(item),
-                # '--foldername', 'comp_exp_loc_80_cifar']
+    train_command = ['python', 'train_actual_subnet.py',
+            '--xp_num_' , str(xp_num_),
+            '--ratio_prune', str(ratio_prune)]
     sp.run(train_command)
 
 if __name__ == '__main__':
-    mask_prune_train()
+    xp_num_ = 5
+    ratio_prune = 0.7
+    mask_prune_train(xp_num_, ratio_prune)

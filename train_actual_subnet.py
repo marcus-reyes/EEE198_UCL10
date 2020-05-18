@@ -18,10 +18,12 @@ parser.add_argument('--criterion', type=str, default='mag',
                     help='criterion to use')
 parser.add_argument('--foldername', type=str, default = 'pruned_may_exp',
                     help='folder to store masked networks in')
-parser.add_argument('--ratio_prune', type=float, default = 0.5,
-                    help='amount to prune')
-parser.add_argument('--inv_flag', action = 'store_true', default = False,
-                    help='invert criterion if True')
+parser.add_argument(
+    "--ratio_prune", type=float, default=0.7, help="amount to prune"
+)
+parser.add_argument(
+    "--xp_num_", type = int, default = 100, help="experiment number"
+)
 
 args = parser.parse_args()
 #1 is 35,68,128,261
@@ -30,13 +32,18 @@ args = parser.parse_args()
 
 env = PruningEnv()
 
-criterion = args.criterion
-inv_flag = args.inv_flag
 folder = '/'+ args.foldername + '/'
 
-
-PATH = os.getcwd() + folder + 'SA0.7_7_pruned.pth'
-model_dicts = torch.load(PATH)
+PATH_from = (
+    os.getcwd()
+    + "/pruned_may_exp/SA_exp"
+    + "_"
+    + str(args.xp_num_)
+    + "_"
+    + str(int(args.ratio_prune*100))
+    + "_pruned.pth"
+)
+model_dicts = torch.load(PATH_from)
 
 filters_per_layer = model_dicts['filters_per_layer']
 #filters_per_layer = [64,128,256,512]
@@ -51,9 +58,16 @@ val_acc = pruned_subnet.evaluate(env.test_dl)
 print(val_acc)
 
 best_val_acc = 0
-writer = SummaryWriter('runs_training_may_exp/experiment_7')
+writer = SummaryWriter(
+    ("runs_training_may_exp/SA_exp_"
+    + str(args.xp_num_)
+    + "_"
+    + str(int(args.ratio_prune*100)))
+)
+
+
 start = time.time()
-for n_iter in range(90):
+for n_iter in range(0):
     if n_iter in ([30,60]):
         for param_group in pruned_subnet.optimizer.param_groups:
             param_group['lr'] *= 0.1
@@ -75,12 +89,21 @@ print(best_val_acc)
 
 if not os.path.exists('trained_may_exp'):
     os.makedirs('trained_may_exp')
-
-PATH = os.getcwd() + '/trained_may_exp/SA0.7_7_pruned_trained_90ep.pth'
+    
+    
+PATH_to = (
+    os.getcwd()
+    + "/trained_may_exp/SA_exp"
+    + "_"
+    + str(args.xp_num_)
+    + "_"
+    + str(int(args.ratio_prune*100))
+    + "_trained.pth"
+)
 model_dicts = {'state_dict': pruned_subnet.model.state_dict(),
         'optim': pruned_subnet.optimizer.state_dict(),
         'filters_per_layer': filters_per_layer}
-torch.save(model_dicts, PATH)
+torch.save(model_dicts, PATH_to)
 
 
 #unpruned 3728.4113001823425 named as pruned but no number

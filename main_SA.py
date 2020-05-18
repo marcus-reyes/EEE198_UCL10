@@ -19,15 +19,7 @@ import argparse
 from collections import deque
 
 xp_num_ = 1
-date = 15
-# Word description for marking the run labels in tensorboard
-# Do not use anything other than letters, numbers, and _. "."
-# messes with tensorboard
 
-description = "90_sparse_large_ham_init_1"
-writer = SummaryWriter(
-    ("runs_SA_may_15/experiment_0_7_rand" + str(xp_num_) + str(description))
-)
 
 
 # Argument parsing
@@ -39,7 +31,7 @@ parser.add_argument(
     help="folder to store masked networks in",
 )
 parser.add_argument(
-    "--ratio_prune", type=float, default=0.7, help="amount to prune"
+    "--ratio_prune", type = float, default = 0.7, help="amount to prune"
 )
 parser.add_argument(
     "--num_batches",
@@ -48,10 +40,27 @@ parser.add_argument(
     help="number of batches for the search evaluation forward pass",
 )
 parser.add_argument(
-    "--max_temp_changes", type=int, default=2, help="maximum temp levels"
+    "--max_temp_changes", type = int, default = 1000, help="maximum temp levels"
 )
-args = parser.parse_args()
+parser.add_argument(
+    "--xp_num_", type = int, default = 100, help="experiment number"
+)
 
+args = parser.parse_args()
+xp_num_ = args.xp_num_
+
+
+# Word description for marking the run labels in tensorboard
+# Do not use anything other than letters, numbers, and _. "."
+# messes with tensorboard
+
+description = "90_sparse_large_ham_init_1"
+writer = SummaryWriter(
+    ("runs_SA_may_exp/SA_exp_"
+    + str(args.xp_num_)
+    + "_"
+    + str(int(args.ratio_prune*100)))
+)
 # Initialize model to be pruned and corresponding methods
 env = PruningEnv()
 env.reset_to_init_1()
@@ -119,16 +128,19 @@ if not os.path.exists("textlogs"):
 
 ###Pre-run data
 log_file = open(
-    "textlogs/test_may_" + str(date) + "_exp_" + str(xp_num_) + ".txt", "w"
+    "textlogs/exp_"
+    + str(xp_num_)
+    + "_sparsity_"
+    + str(int(args.ratio_prune*100))
+    + ".txt", "w"
 )
 log_file.write(
     os.getcwd()
-    + "/masked_may_12/SA"
-    + str(args.ratio_prune)
+    + "/masked_may_exp/SA_exp"
     + "_"
     + str(xp_num_)
     + "_"
-    + str(description)
+    + str(int(args.ratio_prune*100))
     + ".pth\n"
 )
 log_file.write("Hyperparameters\n")
@@ -232,6 +244,8 @@ while temp_changes != args.max_temp_changes:
             },
             BEST_AVE_PATH,
         )
+        best_iter_count = total_iter_count
+        best_mask = current_mask
         best_ave_acc = ave_acc
 
     temp_changes += 1
@@ -240,11 +254,11 @@ while temp_changes != args.max_temp_changes:
 print("\n---------------- End of SA Search ---------------\n")
 
 
-# Prune with the last ACCEPTED mask
+# Prune with the best mask
 
-# Apply the last mask accepted
+# Apply the best mask
 env.reset_to_init_1()
-env.apply_mask(current_mask)
+env.apply_mask(best_mask)
 
 ###Check the amount per layer
 ###Record the per layer_mask
@@ -264,44 +278,39 @@ print("Filters per layer:", num_per_layer)
 print("Total", sum(num_per_layer))
 
 
-(
-    layer_weights_dict,
-    num_weights,
-    layer_flops_dict,
-    num_flops,
-) = compute_weights_and_flops(
-    get_network_def_from_model(env.model, [3, 32, 32])
-)
-
 
 ###Save into .pth
 PATH = (
     os.getcwd()
-    + "/masked_may_exp/SA"
-    + str(args.ratio_prune)
+    + "/masked_may_exp/SA_exp"
     + "_"
     + str(xp_num_)
-    + "_.pth"
+    + "_"
+    + str(int(args.ratio_prune*100))
+    + ".pth"
 )
 model_dicts = {
     "state_dict": env.model.state_dict(),
     "optim": env.optimizer.state_dict(),
     "filters_per_layer": num_per_layer,
+    "iter_found": best_iter_count,
+    "mask_applied": best_mask,
 }
 torch.save(model_dicts, PATH)
 
-###Sanity checks at the end
+###End of run details
 final_acc = env._evaluate_model()
 final_forpass = env.forward_pass(args.num_batches)
-print("Final accuracy is ", final_acc.item())
-print("Final forward pass is ", final_forpass)
 elapsed_time = time.time() - start_time
-print("Elapsed time is", elapsed_time)
 writer.close()
 
 ###Post-run data
 log_file = open(
-    "textlogs/test_may_" + str(date) + "_exp_" + str(xp_num_) + ".txt", "a"
+    "textlogs/exp_"
+    + str(xp_num_)
+    + "_sparsity_"
+    + str(int(args.ratio_prune*100))
+    + ".txt", "a"
 )
 total_down_steps = total_down_steps / total_iter_count
 total_up_steps = total_up_steps / total_iter_count
@@ -322,6 +331,6 @@ log_file.write(str("evaluated accuracy: " + str(final_acc) + "\n"))
 log_file.write(str("Final forwardpass accuracy: " + str(final_forpass) + "\n"))
 
 log_file.write(str("Time taken in seconds: " + str(elapsed_time) + "\n"))
+
 log_file.close()
 
-print("weights and flops", num_weights, num_flops)
