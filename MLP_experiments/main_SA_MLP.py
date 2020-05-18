@@ -263,7 +263,7 @@ model.to(DEVICE)
 ave_acc = 5
 best_ave_acc = ave_acc
 prev_masks = get_mask_mag(
-    torch.rand((1, 7840)), sparsity
+    torch.rand((1, 784*300 + 300*100 + 100*10)), sparsity
 )  # note this is a different randmask
 ham_dist = int(prev_masks.sum())
 prev_ham_dist = ham_dist  # for triangular decay
