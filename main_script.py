@@ -26,6 +26,6 @@ def mask_prune_train(xp_num_, ratio_prune):
     sp.run(train_command)
 
 if __name__ == '__main__':
-    xp_num_ = 5
-    ratio_prune = 0.7
+    xp_num_ = 6
+    ratio_prune = 0.5
     mask_prune_train(xp_num_, ratio_prune)

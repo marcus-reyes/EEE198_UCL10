@@ -401,7 +401,7 @@ class PruningEnv:
                 train_acc.append(
                     (prediction == labels).type(torch.double).mean()
                 )
-                if (idx + 1) % 2 == 0:
+                if False:
                     elapsed_time = time.time() - start_time
                     str_time = time.strftime(
                         "%H:%M:%S", time.gmtime(elapsed_time)

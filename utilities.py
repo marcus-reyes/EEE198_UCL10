@@ -78,7 +78,7 @@ class PrunedSubnet:
                     (prediction == labels).type(torch.double).mean()
                 )
 
-                if (idx + 1) % 2 == 0:
+                if False:
                     elapsed_time = time.time() - start_time
                     str_time = time.strftime(
                         "%H:%M:%S", time.gmtime(elapsed_time)
@@ -91,7 +91,7 @@ class PrunedSubnet:
                             epoch + 1,
                             num_epochs,
                             idx + 1,
-                            len(self.train_dl),
+                            len(train_dl),
                             loss.item(),
                             train_acc[-1],
                             str_time,

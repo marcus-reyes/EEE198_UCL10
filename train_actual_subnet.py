@@ -67,7 +67,7 @@ writer = SummaryWriter(
 
 
 start = time.time()
-for n_iter in range(0):
+for n_iter in range(90):
     if n_iter in ([30,60]):
         for param_group in pruned_subnet.optimizer.param_groups:
             param_group['lr'] *= 0.1
