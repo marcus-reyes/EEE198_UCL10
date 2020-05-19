@@ -6,6 +6,7 @@
 !README.md
 !*.py
 !MLP_experiments/
+!may_init_1_trained_90.pth
 
 MLP_experiments/*
 !MLP_experiments/*.py

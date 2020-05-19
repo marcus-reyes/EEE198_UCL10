@@ -170,7 +170,7 @@ def actual_prune(path_from, path_to):
     log_file.write(
         str("Original weights and Flops: "
         + str(num_weights)
-        + str(num_flops
+        + str(num_flops)
         + str(args.method) + "\n")
     )        
     
