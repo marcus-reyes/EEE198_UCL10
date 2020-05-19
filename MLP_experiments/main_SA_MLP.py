@@ -28,7 +28,7 @@ parser.add_argument(
     "--ratio_prune", type = int, default = 70, help="amount to prune"
 )
 parser.add_argument(
-    "--trial", type = int, default = 1, help="trial/experiment number"
+    "--trial", type = int, default = 2, help="trial/experiment number"
 )
 parse_args = parser.parse_args()
 
@@ -109,7 +109,7 @@ test_loader = torch.utils.data.DataLoader(
 ## General Pruning
 model = DeconsNet().to(DEVICE)  # network to work on
 sparsity = SPARSITY / 100.0  # pruning sparsity
-args.epochs = 25  # used as epochs to fine tune pruned models
+args.epochs = 1  # used as epochs to fine tune pruned models
 
 ## Simulated Annealing Search
 # ham_dist value derived from mask sparsity later on
@@ -256,8 +256,8 @@ print("Trained for:", chkpt["epochs"], "epochs")
 
 
 print("\n======= ! Begin Annealing ! =======\n")
-#DEVICE = "cpu"  # use CPU for annealing
-#model.to(DEVICE)
+DEVICE = "cpu"  # use CPU for annealing
+model.to(DEVICE)
 
 # For logging and other variable initialization:
 ave_acc = 5
@@ -333,7 +333,7 @@ SA_loader = torch.utils.data.DataLoader(
 # SA loop
 # torch.manual_seed(42)
 start_time = time.time()
-while total_iters < 80000:  # around 1.5hr if without memory, longer if with
+while total_iters < 2000:  # around 1.5hr if without memory, longer if with
     for _ in range(int(iter_per_temp)):
         # new_masks = step_from([prev_masks],ham_dist)[0]
         for _ in range(mem_size):

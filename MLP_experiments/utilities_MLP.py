@@ -124,7 +124,7 @@ def train(args, model, device, train_loader, optimizer, epoch):
     model.train()
 
     for batch_idx, (data, target) in enumerate(train_loader):
-        data, target = data.to(DEVICE), target.to(DEVICE)
+        data, target = data.to(device), target.to(device)
 
         optimizer.zero_grad()
         output = model(data)
@@ -202,7 +202,7 @@ def forward_pass(model, device, train_loader, num_of_batches):
 
 def fine_tune_masked_copy(
     args,
-    model,
+    model_,
     init_state_dict,
     mask_type,
     sparsity,
@@ -213,7 +213,7 @@ def fine_tune_masked_copy(
 ):
     """Creates a masked model, fine-tunes it, then saves it"""
 
-    model = type(model)().to(DEVICE)  # duplicate model
+    model = type(model_)().to(DEVICE)  # duplicate model
     model.load_state_dict(init_state_dict)
     if trained_model is not None:
         model, trained_w_model = apply_mask(
