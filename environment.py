@@ -665,16 +665,16 @@ class PruningEnv:
             filters_counted, pruned_counted = self.prune_layer(layer_mask)
             idx += filter_count
 
-    def reset_to_k(self):
-        """Resets CNN to partially trained net w/ full params"""
+    def reset_to_k_90(self):
+        """Resets CNN to partially trained net w/ trained params"""
 
         self.model.load_state_dict(
-            torch.load(os.getcwd() + "/april_experiments_withBN_epoch_5.pth")[
+            torch.load(os.getcwd() + "/may_init_1_trained_90.pth")[
                 "state_dict"
             ]
         )
         self.optimizer.load_state_dict(
-            torch.load(os.getcwd() + "/april_experiments_withBN_epoch_5.pth")[
+            torch.load(os.getcwd() + "/may_init_1_trained_90.pth")[
                 "optim"
             ]
         )
@@ -723,3 +723,43 @@ class PruningEnv:
         self.layer = layer_to_process
         # save total network flops
         self.full_model_flops = sum(self.layer_flops.values())
+        
+    def get_pooled_mag(self, include_grads=False,
+                            include_flops=False): 
+        ''' Gets the pooled magnitudes of the filters
+
+
+            Returns: A vector of values, one for each filter
+        '''
+        
+        #Go to all the layers
+        for layer in self.layers_to_prune:
+        
+            #Get the weights of each layer
+            for name, param in self.model.named_parameters():
+                if layer in name and 'weight' in name:
+                    # State element 2
+                    # copy params
+                    filter_weights = torch.abs(param.data.clone())
+                    
+                    
+                    pooled_weights = torch.squeeze(F.avg_pool2d(filter_weights,
+                                                               filter_weights.size()[-1]))
+
+                    try:  #all non first layers have to have their axis specified for mnist
+                        pooled_weights_mean = pooled_weights.mean(axis = 1)
+                    except: #except when first layer
+                        pooled_weights_mean = pooled_weights
+                        
+                    pooled_weights_mean -= pooled_weights_mean.min()
+                    pooled_weights_mean /= pooled_weights_mean.max() # squish to [0,1]
+
+
+                    try: #Concatenate
+                        state_rep = torch.cat((state_rep,pooled_weights_mean),0)
+
+                    except: #initialize
+                        state_rep = pooled_weights_mean
+                        
+                        
+        return state_rep
