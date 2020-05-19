@@ -115,7 +115,7 @@ if not os.path.exists('trained_may_exp'):
     
 PATH_to = (
     os.getcwd()
-    + "/pruned_may_exp/SA_exp"
+    + "/trained_may_exp/SA_exp"
     + "_"
     + str(args.xp_num_)
     + "_"
