@@ -380,7 +380,7 @@ def apply_mask_from_list(model, mask_list):
             layer.mask = mask_list[idx].clone().detach().to(DEVICE)
 
 
-def apply_mask_from_vector(model, vector):
+def apply_mask_from_vector(model, vector, device):
     """Apply global mask from vector"""
     last_numel = 0
     for idx, layer in enumerate(model.children()):
@@ -391,7 +391,7 @@ def apply_mask_from_vector(model, vector):
                 vector[0, last_numel : last_numel + layer.mask.numel()]
                 .clone()
                 .view(layer.mask.size())
-                .to(DEVICE)
+                .to(device)
             )
             last_numel += layer.mask.numel()
 

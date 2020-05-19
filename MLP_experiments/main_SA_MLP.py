@@ -312,7 +312,7 @@ else:
 new_masks = prev_masks  # initialize
 
 model.load_state_dict(untrained_state_dict)  # copy common init weights
-apply_mask_from_vector(model, new_masks)
+apply_mask_from_vector(model, new_masks, DEVICE)
 mask_wrapper = MaskWrapper(new_masks, ham_dist)
 closed_q.append(copy.deepcopy(mask_wrapper))
 
@@ -345,7 +345,7 @@ while total_iters < 2000:  # around 1.5hr if without memory, longer if with
 
         closed_q.append(copy.deepcopy(mask_wrapper))
         new_masks = mask_wrapper.mask
-        apply_mask_from_vector(model, new_masks)
+        apply_mask_from_vector(model, new_masks, DEVICE)
         new_acc = forward_pass(model, DEVICE, SA_loader, 1)
         ave_acc = sum(accs) / len(accs)
 
@@ -451,7 +451,7 @@ DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 chkpt = torch.load(BEST_MASK_PATH, map_location=DEVICE)
 print("\nLoaded heuristic model with ave acc:", chkpt["ave_acc"])
 model.load_state_dict(chkpt["untrained_state_dict"])
-apply_mask_from_vector(model, chkpt["heur_mask"])
+apply_mask_from_vector(model, chkpt["heur_mask"], DEVICE)
 total_iterations = chkpt["iter"]
 model.to(DEVICE)
 
