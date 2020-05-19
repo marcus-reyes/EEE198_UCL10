@@ -29,7 +29,7 @@ def mask_prune_train(xp_num_, ratio_prune, method_list):
                 '--xp_num_' , str(xp_num_),
                 '--method' , str(method),
                 '--ratio_prune', str(ratio_prune)]
-       
+        print(prune_command, "PRUNECOMMAND")       
         sp.run(prune_command)
         
 
@@ -37,10 +37,11 @@ def mask_prune_train(xp_num_, ratio_prune, method_list):
                 '--xp_num_' , str(xp_num_),
                 '--method' , str(method),
                 '--ratio_prune', str(ratio_prune)]
+        print(train_command, "TRAINCOMMAND")
         sp.run(train_command)
 
 if __name__ == '__main__':
-    xp_num_ = 10
+    xp_num_ = 11
     ratio_prune = 0.7
     method_list = ["SA", "rand", "mag_rewind", "mag_sign_rewind"]
     mask_prune_train(xp_num_, ratio_prune, method_list)
