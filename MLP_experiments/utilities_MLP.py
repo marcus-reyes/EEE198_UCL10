@@ -216,7 +216,7 @@ def fine_tune_masked_copy(
     model = type(model_)().to(DEVICE)  # duplicate model
     model.load_state_dict(init_state_dict)
     if trained_model is not None:
-        model, trained_w_model = apply_mask(
+        model = apply_mask(
                     model, 
                     mask_type, 
                     sparsity, 
@@ -274,7 +274,10 @@ def get_mask_mag(weights, prune_percent):
 
 
 def get_mask_mag_increase(init_weights, final_weights, prune_percent):
-    """Mask based on increase of weights' magnitude throughout training"""
+    """Mask based on increase of weights' magnitude throughout training
+
+    Note: Applies criterion per-layer  (instead of global)
+    """
 
     weights = torch.abs(final_weights) - torch.abs(init_weights)
     flat_weights = torch.flatten(weights)
@@ -342,36 +345,6 @@ def get_mask_sensitivity(mask_grad, prune_percent):
     return mask
 
 
-def get_mask_grad(grad, prune_percent):
-    """ Magnitude of weight gradient criterion"""
-
-    grad_mag = torch.abs(grad)
-
-    # get thresh, make
-    flat_grad = torch.flatten(grad_mag)
-    k = int(len(flat_grad) * prune_percent)
-    vals, _ = torch.topk(flat_grad, k, largest=False)  # return smallest first
-    thresh = vals[-1]  # get k_th highest element
-
-    mask = torch.gt(grad_mag, thresh).type(torch.float)
-    return mask
-
-
-def get_mask_taylor(w_taylor, prune_percent):
-    """Magnitude of weight 1st order taylor approx criterion"""
-    # same with mag rank but w_taylor should be w*grad
-    taylor_mag = torch.abs(w_taylor)
-
-    # get thresh, make
-    flat_grad = torch.flatten(taylor_mag)
-    k = int(len(flat_grad) * prune_percent)
-    vals, _ = torch.topk(flat_grad, k, largest=False)  # return smallest first
-    thresh = vals[-1]  # get k_th highest element
-
-    mask = torch.gt(taylor_mag, thresh).type(torch.float)
-    return mask
-
-
 def apply_mask_from_list(model, mask_list):
     """Apply mask in-place, from list"""
 
@@ -410,19 +383,28 @@ def apply_mask(model, mask_type, sparsity, train_loader, trained_model=None):
         init_model.load_state_dict(model.state_dict())  # copy state_dict
         init_model.to(DEVICE)  # note device is global var
 
-        # get mask for each layer and apply
+        # collect per layer weights in one list
+        init_weights = []
+        final_weights = []
         for (final_layer, init_layer) in zip(
             mag_s_model.children(), init_model.children()
         ):
             if type(final_layer) == MaskedLinear:
-                init_weights = init_layer.weight.clone().detach()
-                final_weights = final_layer.weight.clone().detach()
-                init_layer.mask = get_mask_mag_sign(
-                    init_weights, final_weights, sparsity
-                )
-                final_layer.mask = init_layer.mask.clone().detach()
+                init_weights.append(init_layer.weight.clone().detach())
+                final_weights.append(final_layer.weight.clone().detach())
 
-        return init_model, mag_s_model
+        # gather scores in one vector
+        all_init_scores = torch.cat([torch.flatten(x) for x in init_weights])
+        all_final_scores = torch.cat([torch.flatten(x) for x in final_weights])
+        mask = get_mask_mag_sign(
+                    all_init_scores, 
+                    all_final_scores, 
+                    sparsity
+               )
+
+        apply_mask_from_vector(init_model, mask.unsqueeze(0), DEVICE)
+
+        return init_model
 
     if mask_type == "mag_increase":
         mag_inc_model = type(
@@ -459,63 +441,28 @@ def apply_mask(model, mask_type, sparsity, train_loader, trained_model=None):
         init_model = type(model)()  # create new instance of the model
         init_model.load_state_dict(model.state_dict())  # copy state_dict
         init_model.to(DEVICE)  # note device is global var
+        
+        all_weights = []
+        for final_layer in post_mag_model.children():
+            if isinstance(final_layer, MaskedLinear):
+                all_weights.append(final_layer.weight.clone().detach())
+        
+        # gather all in one long vector
+        all_scores = torch.cat([torch.flatten(x) for x in all_weights])
+        mask = get_mask_mag(all_scores, sparsity)
 
-        for (final_layer, init_layer) in zip(
-            post_mag_model.children(), init_model.children()
-        ):
-            if type(final_layer) == MaskedLinear:
-                layer_weights = final_layer.weight.clone().detach()
-                init_layer.mask = get_mask_mag(layer_weights, sparsity)
-                # note mask is based on final but applied to init
-                final_layer.mask = init_layer.mask.clone().detach()
+        apply_mask_from_vector(init_model, mask.unsqueeze(0), DEVICE)
 
-        return init_model, post_mag_model
+        # for (final_layer, init_layer) in zip(
+        #     post_mag_model.children(), init_model.children()
+        # ):
+        #     if type(final_layer) == MaskedLinear:
+        #         layer_weights = final_layer.weight.clone().detach()
+        #         init_layer.mask = get_mask_mag(layer_weights, sparsity)
+        #         # note mask is based on final but applied to init
+        #         final_layer.mask = init_layer.mask.clone().detach()
 
-    if mask_type == "grad":
-        grad_model = type(model)()  # create new instance of the model
-        grad_model.load_state_dict(model.state_dict())  # copy state_dict
-        grad_model.to(DEVICE)  # note device is global var
-
-        for data, target in test_loader:
-            grad_model.train()
-            data, target = data.to(DEVICE), target.to(DEVICE)
-            loss = F.nll_loss(
-                grad_model(data), target, reduction="sum"
-            )  # sum up batch loss
-            loss.backward()  # compute grad wrt graph leaves (including mask)
-            break  # just one pass
-
-        # get mask for each layer and apply
-        for child_layer in grad_model.children():
-            if type(child_layer) == MaskedLinear:
-                layer_grads = child_layer.weight.grad.clone().detach()
-                child_layer.mask = get_mask_grad(layer_grads, sparsity)
-
-        return grad_model
-
-    elif mask_type == "taylor":
-        taylor_model = type(model)()  # create new instance of the model
-        taylor_model.load_state_dict(model.state_dict())  # copy state_dict
-        taylor_model.to(DEVICE)  # note device is global var
-
-        for data, target in test_loader:
-            taylor_model.train()
-            data, target = data.to(DEVICE), target.to(DEVICE)
-            loss = F.nll_loss(
-                taylor_model(data), target, reduction="sum"
-            )  # sum up batch loss
-            loss.backward()  # compute grad wrt graph leaves (including mask)
-            break  # just one pass
-
-        # get mask for each layer and apply
-        for child_layer in taylor_model.children():
-            if type(child_layer) == MaskedLinear:
-                layer_weights = child_layer.weight.clone().detach()
-                layer_grads = child_layer.weight.grad.clone().detach()
-                # layer_taylor = layer_weights * layer_grads
-                child_layer.mask = get_mask_taylor(layer_grads, sparsity)
-
-        return taylor_model
+        return init_model
 
     elif mask_type == "snip":
         temp_model = copy.deepcopy(model)
@@ -578,9 +525,15 @@ def apply_mask(model, mask_type, sparsity, train_loader, trained_model=None):
         rand_model = type(model)()  # create new instance of the model
         rand_model.load_state_dict(model.state_dict())  # copy state_dict
         rand_model.to(DEVICE)  # note DEVICE is global var
+        total_weights = 0
         for child_layer in rand_model.children():
-            if type(child_layer) == MaskedLinear:
-                layer_weights = child_layer.weight.clone().detach()
-                child_layer.mask = get_mask_rand(layer_weights, sparsity)
+            total_weights += child_layer.weight.numel()
+        rand_mask = get_mask_mag(torch.rand((1, total_weights)), sparsity)  
+        rand_mask.unsqueeze(0)
+        apply_mask_from_vector(rand_model, rand_mask, DEVICE)
+        # for child_layer in rand_model.children():
+        #     if type(child_layer) == MaskedLinear:
+        #         layer_weights = child_layer.weight.clone().detach()
+        #         child_layer.mask = get_mask_rand(layer_weights, sparsity)
 
         return rand_model
