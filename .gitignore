@@ -7,6 +7,7 @@
 !*.py
 !MLP_experiments/
 !may_init_1_trained_90.pth
+!init_may_10_num_1.pth
 
 MLP_experiments/*
 !MLP_experiments/*.py
