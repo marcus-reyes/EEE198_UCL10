@@ -725,7 +725,8 @@ class PruningEnv:
         self.full_model_flops = sum(self.layer_flops.values())
         
     def get_pooled_mag(self, include_grads=False,
-                            include_flops=False): 
+                            include_flops=False,
+                            abs_val=True): 
         ''' Gets the pooled magnitudes of the filters
 
 
@@ -740,8 +741,12 @@ class PruningEnv:
                 if layer in name and 'weight' in name:
                     # State element 2
                     # copy params
-                    filter_weights = torch.abs(param.data.clone())
-                    
+                    if abs_val:
+                        print("Using abs_val")
+                        filter_weights = torch.abs(param.data.clone())
+                    else:
+                        print("Using non abs_val")
+                        filter_weights = param.data.clone()
                     
                     pooled_weights = torch.squeeze(F.avg_pool2d(filter_weights,
                                                                filter_weights.size()[-1]))
@@ -750,10 +755,7 @@ class PruningEnv:
                         pooled_weights_mean = pooled_weights.mean(axis = 1)
                     except: #except when first layer
                         pooled_weights_mean = pooled_weights
-                        
-                    pooled_weights_mean -= pooled_weights_mean.min()
-                    pooled_weights_mean /= pooled_weights_mean.max() # squish to [0,1]
-
+                    
 
                     try: #Concatenate
                         state_rep = torch.cat((state_rep,pooled_weights_mean),0)

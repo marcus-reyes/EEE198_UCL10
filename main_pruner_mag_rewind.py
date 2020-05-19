@@ -25,6 +25,9 @@ parser.add_argument(
 parser.add_argument(
     "--xp_num_", type = int, default = 100, help="experiment number"
 )
+parser.add_argument(
+    "--method", type = str, default = "SA", help="method to use"
+)
 args = parser.parse_args()
 
 

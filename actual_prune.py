@@ -26,7 +26,9 @@ parser.add_argument(
 parser.add_argument(
     "--xp_num_", type = int, default = 100, help="experiment number"
 )
-
+parser.add_argument(
+    "--method", type = str, default = "SA", help="method to use"
+)
 
 args = parser.parse_args()
 
@@ -178,6 +180,24 @@ if not os.path.exists('pruned_may_exp'):
     os.makedirs('pruned_may_exp')
     
 ###actual_prune(path_from, path_to)
+
+if args.method == "SA":
+    from_string = ".pth"
+    to_string = "_pruned.pth"
+    
+elif args.method == "rand":
+    from_string = "_rand.pth"
+    to_string = "_rand_pruned.pth"
+    
+elif args.method == "mag_rewind":
+    from_string = "_mag_rewind.pth"
+    to_string = "_mag_rewind_pruned.pth"
+    
+elif args.method == "mag_sign_rewind":
+    from_string = "_mag_sign_rewind.pth"
+    to_string = "_mag_sign_rewind_pruned.pth"
+
+
 PATH_from = (
     os.getcwd()
     + "/masked_may_exp/SA_exp"
@@ -185,7 +205,7 @@ PATH_from = (
     + str(args.xp_num_)
     + "_"
     + str(int(args.ratio_prune*100))
-    + ".pth"
+    + str(from_string)
 )
 PATH_to = (
     os.getcwd()
@@ -194,9 +214,9 @@ PATH_to = (
     + str(args.xp_num_)
     + "_"
     + str(int(args.ratio_prune*100))
-    + "_pruned.pth"
+    + str(to_string)
 )
+
 actual_prune(PATH_from, PATH_to)
 
 
-exit()

@@ -31,8 +31,9 @@ parser.add_argument(
 args = parser.parse_args()
 
 
+# Basemark is 5381
+
 env = PruningEnv()
-env.reset_to_init_1()
 
 #### Obtain layers of the neural network
 total_filters_count = 0
@@ -43,21 +44,32 @@ for name, param in env.model.named_parameters():
         # print(name)
         # print(param.shape[0])
         size_of_layer.append(param.shape[0])
-        
+
+#Obtain the initial mag_signs        
+env.reset_to_init_1()
+initial_mag_values = env.get_pooled_mag(abs_val = False)
+initial_mag_values[initial_mag_values > 0] = 1
+initial_mag_values[initial_mag_values < 0] = -1
 
 
+env.reset_to_k_90()
+#Obtain the final mag_values
+final_mag_values = env.get_pooled_mag(abs_val = False)
 
-#Obtain the mask
-random_values = torch.rand((960))
-random_rank = torch.topk(random_values,\
+
+#Obtain the largest final values that retained their signs
+mag_sign_values = initial_mag_values*final_mag_values
+
+mag_sign_rank = torch.topk(mag_sign_values,\
                             int(total_filters_count*args.ratio_prune),\
                             largest = False)
-random_mask = torch.ones(total_filters_count)
-random_mask[random_rank[1]] = 0
+mag_sign_mask = torch.ones(total_filters_count)
+mag_sign_mask[mag_sign_rank[1]] = 0
 
-env.reset_to_init_1()
-env.apply_mask(random_mask)
-
+#Reset to initialization before applying
+env.reset_to_k_90()
+env.apply_mask(mag_sign_mask)
+print(env._evaluate_model(),"First")
 
 
 ###Save into .pth
@@ -68,9 +80,11 @@ PATH = (
     + str(args.xp_num_)
     + "_"
     + str(int(args.ratio_prune*100))
-    + "_rand.pth"
-)model_dicts = {'state_dict': env.model.state_dict(),
+    + "_mag_sign_rewind.pth"
+)
+model_dicts = {'state_dict': env.model.state_dict(),
         'optim': env.optimizer.state_dict(),
-        'kept_indices' : torch.where(layer_action == 1)}
+        'kept_indices' : torch.where(mag_sign_mask == 1)}
 torch.save(model_dicts, PATH)
+
 

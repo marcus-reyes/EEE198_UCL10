@@ -24,8 +24,29 @@ parser.add_argument(
 parser.add_argument(
     "--xp_num_", type = int, default = 100, help="experiment number"
 )
+parser.add_argument(
+    "--method", type = str, default = "SA", help="method to use"
+)
 
 args = parser.parse_args()
+
+
+if args.method == "SA":
+    from_string = "_pruned.pth"
+    to_string = "_trained.pth"
+elif args.method == "rand":
+    from_string = "_rand_pruned.pth"
+    to_string = "_rand_trained.pth"
+    
+elif args.method == "mag_rewind":
+    from_string = "_mag_rewind_pruned.pth"
+    to_string = "_mag_rewind_trained.pth"
+    
+elif args.method == "mag_sign_rewind":
+    from_string = "_mag_sign_rewind_pruned.pth"
+    to_string = "_mag_sign_rewind_trained.pth"
+
+
 #1 is 35,68,128,261
 #2 is 37,62,140,253
 #3 is 32,63,120,257
@@ -41,12 +62,12 @@ PATH_from = (
     + str(args.xp_num_)
     + "_"
     + str(int(args.ratio_prune*100))
-    + "_pruned.pth"
+    + str(from_string)
 )
 model_dicts = torch.load(PATH_from)
 
+
 filters_per_layer = model_dicts['filters_per_layer']
-#filters_per_layer = [64,128,256,512]
 pruned_subnet = PrunedSubnet(filter_counts = filters_per_layer)
 pruned_subnet.build()
 for name, param in pruned_subnet.model.named_modules():
@@ -54,15 +75,16 @@ for name, param in pruned_subnet.model.named_modules():
 
 pruned_subnet.model.load_state_dict(model_dicts['state_dict'])
 
-val_acc = pruned_subnet.evaluate(env.test_dl)
-print(val_acc)
 
 best_val_acc = 0
+
 writer = SummaryWriter(
     ("runs_training_may_exp/SA_exp_"
     + str(args.xp_num_)
     + "_"
-    + str(int(args.ratio_prune*100)))
+    + str(int(args.ratio_prune*100))
+    + "_"
+    + str(args.method))
 )
 
 
@@ -93,12 +115,12 @@ if not os.path.exists('trained_may_exp'):
     
 PATH_to = (
     os.getcwd()
-    + "/trained_may_exp/SA_exp"
+    + "/pruned_may_exp/SA_exp"
     + "_"
     + str(args.xp_num_)
     + "_"
     + str(int(args.ratio_prune*100))
-    + "_trained.pth"
+    + str(to_string)
 )
 model_dicts = {'state_dict': pruned_subnet.model.state_dict(),
         'optim': pruned_subnet.optimizer.state_dict(),
