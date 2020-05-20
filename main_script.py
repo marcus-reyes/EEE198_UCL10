@@ -41,7 +41,7 @@ def mask_prune_train(xp_num_, ratio_prune, method_list):
         sp.run(train_command)
 
 if __name__ == '__main__':
-    xp_num_ = 11
-    ratio_prune = 0.7
+    xp_num_ = 15
+    ratio_prune = 0.3
     method_list = ["SA", "rand", "mag_rewind", "mag_sign_rewind"]
     mask_prune_train(xp_num_, ratio_prune, method_list)
