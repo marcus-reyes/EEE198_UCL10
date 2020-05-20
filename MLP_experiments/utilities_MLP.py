@@ -350,6 +350,7 @@ def apply_mask_from_list(model, mask_list):
 
     for idx, layer in enumerate(model.children()):
         if type(layer) == MaskedLinear:
+            print(idx)
             layer.mask = mask_list[idx].clone().detach().to(DEVICE)
 
 
@@ -452,15 +453,6 @@ def apply_mask(model, mask_type, sparsity, train_loader, trained_model=None):
         mask = get_mask_mag(all_scores, sparsity)
 
         apply_mask_from_vector(init_model, mask.unsqueeze(0), DEVICE)
-
-        # for (final_layer, init_layer) in zip(
-        #     post_mag_model.children(), init_model.children()
-        # ):
-        #     if type(final_layer) == MaskedLinear:
-        #         layer_weights = final_layer.weight.clone().detach()
-        #         init_layer.mask = get_mask_mag(layer_weights, sparsity)
-        #         # note mask is based on final but applied to init
-        #         final_layer.mask = init_layer.mask.clone().detach()
 
         return init_model
 
