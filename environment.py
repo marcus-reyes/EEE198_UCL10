@@ -724,6 +724,32 @@ class PruningEnv:
         # save total network flops
         self.full_model_flops = sum(self.layer_flops.values())
         
+        
+    def reset_to_k_5(self):
+        """Resets CNN to first initialization"""
+
+        self.model.load_state_dict(
+            torch.load(os.getcwd() + "/may_init_1_trained_5.pth")["state_dict"]
+        )
+        self.optimizer.load_state_dict(
+            torch.load(os.getcwd() + "/may_init_1_trained_5.pth")["optim"]
+        )
+        # initialize starting layer to process
+        self.layer = self.layers_to_prune[0]
+        # initialize prune amounts to zer
+        self.layer_prune_amounts = OrderedDict(
+            zip(self.layers_to_prune, [0] * len(self.layers_to_prune))
+        )
+        # get layer_flops dict
+        layer_to_process = self.layer  # preserve
+        for name in self.layers_to_prune:
+            self.layer = name
+            orig_flops, flops_remain = self._estimate_layer_flops()
+            # name to estimate_flops()
+            self.layer_flops[self.layer] = flops_remain
+        self.layer = layer_to_process
+        # save total network flops
+        self.full_model_flops = sum(self.layer_flops.values())        
     def get_pooled_mag(self, include_grads=False,
                             include_flops=False,
                             abs_val=True): 

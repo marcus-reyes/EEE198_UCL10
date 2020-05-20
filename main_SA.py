@@ -40,13 +40,16 @@ parser.add_argument(
     help="number of batches for the search evaluation forward pass",
 )
 parser.add_argument(
-    "--max_temp_changes", type = int, default = 1000, help="maximum temp levels"
+    "--max_temp_changes", type = int, default = 1250, help="maximum temp levels"
 )
 parser.add_argument(
     "--xp_num_", type = int, default = 100, help="experiment number"
 )
 parser.add_argument(
     "--method", type = str, default = "SA", help="method to use"
+)
+parser.add_argument(
+    "--k_epoch", type = int, default = 5, help = "which k to reset to"
 )
 args = parser.parse_args()
 xp_num_ = args.xp_num_
@@ -65,7 +68,13 @@ writer = SummaryWriter(
 )
 # Initialize model to be pruned and corresponding methods
 env = PruningEnv()
-env.reset_to_init_1()
+if args.k_epoch == 5:
+    env.reset_to_k_5()
+elif args.k_epoch == 90:
+    env.reset_to_k_90()
+else:
+    env.reset_to_init_1()
+
 
 # Setting the initial mask and its sparsity
 rand_values = torch.rand((env.total_filters))
@@ -146,7 +155,6 @@ log_file.write(
     + ".pth\n"
 )
 log_file.write("Hyperparameters\n")
-log_file.write(str("At init:\n"))
 log_file.write(str("temp: " + str(temp) + "\n"))
 log_file.write(str("temp_decay: " + str(temp_decay) + "\n"))
 log_file.write(str("iter_per_temp: " + str(iter_per_temp) + "\n"))
@@ -172,7 +180,12 @@ while temp_changes != args.max_temp_changes:
                 break
 
         # Tentatively apply the mask
-        env.reset_to_init_1()
+        if args.k_epoch == 5:
+            env.reset_to_k_5()
+        elif args.k_epoch == 90:
+            env.reset_to_k_90()
+        else:
+            env.reset_to_init_1()
         env.apply_mask(new_mask)
 
         # Check if keep or discard
@@ -304,6 +317,7 @@ torch.save(model_dicts, PATH)
 final_acc = env._evaluate_model()
 final_forpass = env.forward_pass(args.num_batches)
 elapsed_time = time.time() - start_time
+formatted_time = time.strftime("%H:%M:%S", time.gmtime(elapsed_time))
 writer.close()
 
 ###Post-run data
@@ -327,12 +341,12 @@ log_file.write(str("final_structure: " + str(num_per_layer) + "\n"))
 
 
 log_file.write(
-    str("last_ave_acc: (NOT NECESSARILY ACTUAL ACC): " + str(ave_acc) + "\n")
+    str("last_ave_acc: " + str(ave_acc) + "\n")
 )
-log_file.write(str("evaluated accuracy: " + str(final_acc) + "\n"))
-log_file.write(str("Final forwardpass accuracy: " + str(final_forpass) + "\n"))
+log_file.write(str("evaluated_accuracy: " + str(final_acc) + "\n"))
+log_file.write(str("forwardpass_accuracy: " + str(final_forpass) + "\n"))
 
-log_file.write(str("Time taken in seconds: " + str(elapsed_time) + "\n"))
+log_file.write(str("time: " + str(formatted_time) + "\n"))
 
 log_file.close()
 
