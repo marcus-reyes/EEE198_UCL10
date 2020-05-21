@@ -42,8 +42,10 @@ def mask_prune_train(xp_num_, ratio_prune, method_list, k_epoch):
         sp.run(train_command)
 
 if __name__ == '__main__':
-    xp_num_list = [30, 33, 36, 39]
-    ratio_prune_list = [0.5, 0.7, 0,8, 0.9]
+
+	#Due to the hamming dist step fnction runs 36,39 are invalidated
+    xp_num_list = [42,45]
+    ratio_prune_list = [0.8, 0.9]
     method_list = ["SA", "rand", "mag_rewind", "mag_sign_rewind"]
     SA_list = ["SA"]
     for xp_num_, ratio_prune in zip(xp_num_list, ratio_prune_list):

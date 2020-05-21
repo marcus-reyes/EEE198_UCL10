@@ -19,7 +19,7 @@ import argparse
 from collections import deque
 
 
-xp_num_ = 2
+xp_num_ = 3
 
 env = PruningEnv()
 
