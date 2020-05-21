@@ -269,8 +269,21 @@ while temp_changes != args.max_temp_changes:
 print("\n---------------- End of SA Search ---------------\n")
 
 
-# Prune with the best mask
 
+
+# Tentatively apply the mask on the chosen k and store the accuracy
+if args.k_epoch == 5:
+    env.reset_to_k_5()
+elif args.k_epoch == 90:
+    env.reset_to_k_90()
+else:
+    env.reset_to_init_1()
+env.apply_mask(best_mask)
+k_epoch_accuracy = env._evaluate_model()
+
+
+
+# Prune with the best mask
 # Apply the best mask
 env.reset_to_init_1()
 env.apply_mask(best_mask)
@@ -345,7 +358,9 @@ log_file.write(
 )
 log_file.write(str("evaluated_accuracy: " + str(final_acc) + "\n"))
 log_file.write(str("forwardpass_accuracy: " + str(final_forpass) + "\n"))
-
+log_file.write(
+    str("k_epoch_acc: " + str(k_epoch_accuracy) + "\n")
+)
 log_file.write(str("time: " + str(formatted_time) + "\n"))
 
 log_file.close()
