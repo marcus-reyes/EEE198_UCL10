@@ -669,12 +669,12 @@ class PruningEnv:
         """Resets CNN to partially trained net w/ trained params"""
 
         self.model.load_state_dict(
-            torch.load(os.getcwd() + "/may_21_init_2_trained_90.pth")[
+            torch.load(os.getcwd() + "/may_21_init_3_trained_90.pth")[
                 "state_dict"
             ]
         )
         self.optimizer.load_state_dict(
-            torch.load(os.getcwd() + "/may_21_init_2_trained_90.pth")[
+            torch.load(os.getcwd() + "/may_21_init_3_trained_90.pth")[
                 "optim"
             ]
         )
@@ -702,10 +702,10 @@ class PruningEnv:
         """Resets CNN to first initialization"""
 
         self.model.load_state_dict(
-            torch.load(os.getcwd() + "/init_may_21_num_2.pth")["state_dict"]
+            torch.load(os.getcwd() + "/init_may_21_num_3.pth")["state_dict"]
         )
         self.optimizer.load_state_dict(
-            torch.load(os.getcwd() + "/init_may_21_num_2.pth")["optim"]
+            torch.load(os.getcwd() + "/init_may_21_num_3.pth")["optim"]
         )
         # initialize starting layer to process
         self.layer = self.layers_to_prune[0]
@@ -725,14 +725,14 @@ class PruningEnv:
         self.full_model_flops = sum(self.layer_flops.values())
         
         
-    def reset_to_k_5(self):
+    def reset_to_k_0(self):
         """Resets CNN to first initialization"""
 
         self.model.load_state_dict(
-            torch.load(os.getcwd() + "/may_21_init_2_trained_5.pth")["state_dict"]
+            torch.load(os.getcwd() + "/may_21_init_3_trained_0.pth")["state_dict"]
         )
         self.optimizer.load_state_dict(
-            torch.load(os.getcwd() + "/may_21_init_2_trained_5.pth")["optim"]
+            torch.load(os.getcwd() + "/may_21_init_3_trained_0.pth")["optim"]
         )
         # initialize starting layer to process
         self.layer = self.layers_to_prune[0]
@@ -749,7 +749,59 @@ class PruningEnv:
             self.layer_flops[self.layer] = flops_remain
         self.layer = layer_to_process
         # save total network flops
-        self.full_model_flops = sum(self.layer_flops.values())        
+        self.full_model_flops = sum(self.layer_flops.values())
+        
+    def reset_to_k_2(self):
+        """Resets CNN to first initialization"""
+
+        self.model.load_state_dict(
+            torch.load(os.getcwd() + "/may_21_init_3_trained_2.pth")["state_dict"]
+        )
+        self.optimizer.load_state_dict(
+            torch.load(os.getcwd() + "/may_21_init_3_trained_2.pth")["optim"]
+        )
+        # initialize starting layer to process
+        self.layer = self.layers_to_prune[0]
+        # initialize prune amounts to zer
+        self.layer_prune_amounts = OrderedDict(
+            zip(self.layers_to_prune, [0] * len(self.layers_to_prune))
+        )
+        # get layer_flops dict
+        layer_to_process = self.layer  # preserve
+        for name in self.layers_to_prune:
+            self.layer = name
+            orig_flops, flops_remain = self._estimate_layer_flops()
+            # name to estimate_flops()
+            self.layer_flops[self.layer] = flops_remain
+        self.layer = layer_to_process
+        # save total network flops
+        self.full_model_flops = sum(self.layer_flops.values())
+                
+    def reset_to_k_5(self):
+        """Resets CNN to first initialization"""
+
+        self.model.load_state_dict(
+            torch.load(os.getcwd() + "/may_21_init_3_trained_5.pth")["state_dict"]
+        )
+        self.optimizer.load_state_dict(
+            torch.load(os.getcwd() + "/may_21_init_3_trained_5.pth")["optim"]
+        )
+        # initialize starting layer to process
+        self.layer = self.layers_to_prune[0]
+        # initialize prune amounts to zer
+        self.layer_prune_amounts = OrderedDict(
+            zip(self.layers_to_prune, [0] * len(self.layers_to_prune))
+        )
+        # get layer_flops dict
+        layer_to_process = self.layer  # preserve
+        for name in self.layers_to_prune:
+            self.layer = name
+            orig_flops, flops_remain = self._estimate_layer_flops()
+            # name to estimate_flops()
+            self.layer_flops[self.layer] = flops_remain
+        self.layer = layer_to_process
+        # save total network flops
+        self.full_model_flops = sum(self.layer_flops.values())           
     def get_pooled_mag(self, include_grads=False,
                             include_flops=False,
                             abs_val=True): 

@@ -40,7 +40,7 @@ parser.add_argument(
     help="number of batches for the search evaluation forward pass",
 )
 parser.add_argument(
-    "--max_temp_changes", type = int, default = 1250, help="maximum temp levels"
+    "--max_temp_changes", type = int, default = 1000, help="maximum temp levels"
 )
 parser.add_argument(
     "--xp_num_", type = int, default = 100, help="experiment number"
@@ -68,13 +68,20 @@ writer = SummaryWriter(
 )
 # Initialize model to be pruned and corresponding methods
 env = PruningEnv()
-if args.k_epoch == 5:
+if args.k_epoch == 0:
+    env.reset_to_k_0()
+    
+elif args.k_epoch == 2:
+    env.reset_to_k_2()
+    
+elif args.k_epoch == 5:
     env.reset_to_k_5()
+    
 elif args.k_epoch == 90:
     env.reset_to_k_90()
+    
 else:
     env.reset_to_init_1()
-
 
 # Setting the initial mask and its sparsity
 rand_values = torch.rand((env.total_filters))
@@ -180,10 +187,18 @@ while temp_changes != args.max_temp_changes:
                 break
 
         # Tentatively apply the mask
-        if args.k_epoch == 5:
+        if args.k_epoch == 0:
+            env.reset_to_k_0()
+            
+        elif args.k_epoch == 2:
+            env.reset_to_k_2()
+            
+        elif args.k_epoch == 5:
             env.reset_to_k_5()
+            
         elif args.k_epoch == 90:
             env.reset_to_k_90()
+            
         else:
             env.reset_to_init_1()
         env.apply_mask(new_mask)
@@ -272,10 +287,18 @@ print("\n---------------- End of SA Search ---------------\n")
 
 
 # Tentatively apply the mask on the chosen k and store the accuracy
-if args.k_epoch == 5:
+if args.k_epoch == 0:
+    env.reset_to_k_0()
+    
+elif args.k_epoch == 2:
+    env.reset_to_k_2()
+    
+elif args.k_epoch == 5:
     env.reset_to_k_5()
+    
 elif args.k_epoch == 90:
     env.reset_to_k_90()
+    
 else:
     env.reset_to_init_1()
 env.apply_mask(best_mask)
