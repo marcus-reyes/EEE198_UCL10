@@ -40,7 +40,7 @@ parser.add_argument(
     help="number of batches for the search evaluation forward pass",
 )
 parser.add_argument(
-    "--max_temp_changes", type = int, default = 1250, help="maximum temp levels"
+    "--max_temp_changes", type = int, default = 1000, help="maximum temp levels"
 )
 parser.add_argument(
     "--xp_num_", type = int, default = 100, help="experiment number"
@@ -68,13 +68,20 @@ writer = SummaryWriter(
 )
 # Initialize model to be pruned and corresponding methods
 env = PruningEnv()
-if args.k_epoch == 5:
+if args.k_epoch == 0:
+    env.reset_to_k_0()
+    
+elif args.k_epoch == 2:
+    env.reset_to_k_2()
+    
+elif args.k_epoch == 5:
     env.reset_to_k_5()
+    
 elif args.k_epoch == 90:
     env.reset_to_k_90()
+    
 else:
     env.reset_to_init_1()
-
 
 # Setting the initial mask and its sparsity
 rand_values = torch.rand((env.total_filters))
@@ -180,10 +187,18 @@ while temp_changes != args.max_temp_changes:
                 break
 
         # Tentatively apply the mask
-        if args.k_epoch == 5:
+        if args.k_epoch == 0:
+            env.reset_to_k_0()
+            
+        elif args.k_epoch == 2:
+            env.reset_to_k_2()
+            
+        elif args.k_epoch == 5:
             env.reset_to_k_5()
+            
         elif args.k_epoch == 90:
             env.reset_to_k_90()
+            
         else:
             env.reset_to_init_1()
         env.apply_mask(new_mask)
@@ -269,8 +284,29 @@ while temp_changes != args.max_temp_changes:
 print("\n---------------- End of SA Search ---------------\n")
 
 
-# Prune with the best mask
 
+
+# Tentatively apply the mask on the chosen k and store the accuracy
+if args.k_epoch == 0:
+    env.reset_to_k_0()
+    
+elif args.k_epoch == 2:
+    env.reset_to_k_2()
+    
+elif args.k_epoch == 5:
+    env.reset_to_k_5()
+    
+elif args.k_epoch == 90:
+    env.reset_to_k_90()
+    
+else:
+    env.reset_to_init_1()
+env.apply_mask(best_mask)
+k_epoch_accuracy = env._evaluate_model()
+
+
+
+# Prune with the best mask
 # Apply the best mask
 env.reset_to_init_1()
 env.apply_mask(best_mask)
@@ -345,7 +381,9 @@ log_file.write(
 )
 log_file.write(str("evaluated_accuracy: " + str(final_acc) + "\n"))
 log_file.write(str("forwardpass_accuracy: " + str(final_forpass) + "\n"))
-
+log_file.write(
+    str("k_epoch_acc: " + str(k_epoch_accuracy) + "\n")
+)
 log_file.write(str("time: " + str(formatted_time) + "\n"))
 
 log_file.close()

@@ -21,12 +21,13 @@ env.reset_to_init_1()
 # env.model.load_state_dict(torch.load(os.getcwd() + \
                                         # '/sgd_90_.pth')['state_dict']) 
 
-writer = SummaryWriter('runs_training_may_exp/unpruned_1')
+writer = SummaryWriter('runs_training_may_exp/init_3_unpruned')
     
 val_acc = env._evaluate_model()
 print(val_acc)
 
 val_accs = []
+writer.add_scalar('Test/train', val_acc, 0)
 for epoch in range(90):
     if epoch in ([30,60]):
         for param_group in env.optimizer.param_groups:
@@ -36,16 +37,16 @@ for epoch in range(90):
     
     val_acc = env._evaluate_model()
     print(val_acc)
-    writer.add_scalar('Test/train', val_acc, epoch)
-    if epoch == 5:
+    writer.add_scalar('Test/train', val_acc, epoch + 1)
+    if epoch in ([0,2,5]):
         model_dicts = {'state_dict': env.model.state_dict(),
         'optim': env.optimizer.state_dict()}
-        PATH = os.getcwd() + '/unpruned_epoch_' + str(epoch) + '.pth'
+        PATH = os.getcwd() + '/may_21_init_3_trained_' + str(epoch) + '.pth'
         torch.save(model_dicts, PATH)
 val_acc = env._evaluate_model()
 writer.close()
 print(val_acc)
 model_dicts = {'state_dict': env.model.state_dict(),
         'optim': env.optimizer.state_dict()}
-PATH = os.getcwd() + '/unpruned_final_90.pth'
+PATH = os.getcwd() + '/may_21_init_3_trained_90.pth'
 torch.save(model_dicts, PATH)

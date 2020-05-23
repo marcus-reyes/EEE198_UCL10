@@ -121,7 +121,7 @@ test_loader = torch.utils.data.DataLoader(
 ## General Pruning
 model = DeconsNet().to(DEVICE)  # network to work on
 sparsity = SPARSITY / 100.0  # pruning sparsity
-args.epochs = 40 # used as epochs to fine tune pruned models
+args.epochs = 50 # used as epochs to fine tune pruned models
 
 ## Simulated Annealing Search
 # ham_dist value derived from mask sparsity later on
@@ -270,8 +270,8 @@ print("Trained for:", chkpt["epochs"], "epochs")
 
 
 print("\n======= ! Begin Annealing ! =======\n")
-DEVICE = "cpu"  # use CPU for annealing
-model.to(DEVICE)
+#DEVICE = "cpu"  # use CPU for annealing
+#model.to(DEVICE)
 
 # For logging and other variable initialization:
 ave_acc = 5

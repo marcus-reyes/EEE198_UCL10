@@ -28,6 +28,9 @@ parser.add_argument(
 parser.add_argument(
     "--method", type = str, default = "SA", help="method to use"
 )
+parser.add_argument(
+    "--k_epoch", type = int, default = 5, help = "which k to reset to"
+)
 args = parser.parse_args()
 
 
@@ -82,6 +85,24 @@ PATH = (
     + str(int(args.ratio_prune*100))
     + "_mag_sign_rewind.pth"
 )
+
+###Log the pre training evaluation accuracy
+log_file = open(
+    "textlogs/exp_"
+    + str(xp_num_)
+    + "_sparsity_"
+    + str(int(args.ratio_prune*100))
+    + ".txt", "a"
+)
+final_acc = env._evaluate_model()
+log_file.write(
+    str(str(args.method) + "_evaluated_accuracy: " + str(final_acc) + "\n")
+)
+log_file.close()
+
+
+
+
 model_dicts = {'state_dict': env.model.state_dict(),
         'optim': env.optimizer.state_dict(),
         'kept_indices' : torch.where(mag_sign_mask == 1)}
