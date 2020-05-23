@@ -336,6 +336,7 @@ if parse_args.reinit:
 
 apply_mask_from_vector(model, new_masks, DEVICE)
 
+k_acc = -1
 if parse_args.k > 0:
     print("\n===== Partial ({}) Training SA Model =====".format(parse_args.k))
     optimizer = optim.Adadelta(model.parameters(), lr=args.lr)
@@ -461,7 +462,7 @@ while total_iters < 80000:
         torch.save(
             {
                 "untrained_state_dict": model.state_dict(),
-                "heur_mask": prev_masks,  # may make this a list compre
+                "heur_mask": prev_masks,  
                 "k": parse_args.k,
                 "ave_acc": ave_acc,
                 "iter": total_iters,
@@ -524,6 +525,7 @@ print(
     time.strftime("%H:%M:%S", time.gmtime(elapsed_time)),
 )
 print("\tTotal Iterations:", total_iterations)
+print("\tk_acc:", k_acc)
 print("\tSA ave_acc:", chkpt["ave_acc"])
 print("\tUntrained Accuracy:", untrained_acc)
 print("\tBest Trained Accuracy:", max(accs))
