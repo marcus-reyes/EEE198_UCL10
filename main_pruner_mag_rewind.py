@@ -81,7 +81,7 @@ PATH = (
 ###Log the pre training evaluation accuracy
 log_file = open(
     "textlogs/exp_"
-    + str(xp_num_)
+    + str(args.xp_num_)
     + "_sparsity_"
     + str(int(args.ratio_prune*100))
     + ".txt", "a"

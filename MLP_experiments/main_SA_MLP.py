@@ -28,7 +28,7 @@ parser.add_argument(
     "--ratio_prune", type = int, default = 80, help="amount to prune"
 )
 parser.add_argument(
-    "--trial", type = int, default = 3, help="trial/experiment number"
+    "--trial", type = int, default = 4, help="trial/experiment number"
 )
 parser.add_argument(
     "--k", type = int, default = 0, help="partial-train epochs"
@@ -48,17 +48,17 @@ if parse_args.reinit:
     EXP_PATH = EXP_PATH + '_reinit'
 Path(EXP_PATH).mkdir(parents=True, exist_ok=True)
 
-EXP_PATH_TAR = SPARSITY_PATH + "/trial_2_may19"  # to get already existing tars
+# EXP_PATH_TAR = SPARSITY_PATH + "/trial_2_may19"  # to get already existing tars
 
-TRAINED_SNIP_PATH = EXP_PATH_TAR + "/trained_snip_mlp.tar"
-TRAINED_RAND_PATH = EXP_PATH_TAR + "/trained_rand_mlp.tar"
-TRAINED_LTH_PATH = EXP_PATH_TAR + "/trained_lth_mlp.tar"
-TRAINED_DCN_PATH = EXP_PATH_TAR + "/trained_dcn_mlp.tar"
+TRAINED_SNIP_PATH = EXP_PATH + "/trained_snip_mlp.tar"
+TRAINED_RAND_PATH = EXP_PATH + "/trained_rand_mlp.tar"
+TRAINED_LTH_PATH = EXP_PATH + "/trained_lth_mlp.tar"
+TRAINED_DCN_PATH = EXP_PATH + "/trained_dcn_mlp.tar"
 TRAINED_HEUR_PATH = EXP_PATH + "/trained_heur_mlp.tar"
 BEST_MASK_PATH = EXP_PATH + "/best_mask_mlp.pth"  # achieved highest ave acc
 PLOT_PATH = EXP_PATH + "/SA_plot.pdf"  # plot of SA optimization
 
-FINE_TUNE = False  # boolean, set to False when saved models are present
+FINE_TUNE = True  # boolean, set to False when saved models are present
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Import Dataset & Args
