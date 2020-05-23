@@ -28,7 +28,7 @@ parser.add_argument(
     "--ratio_prune", type = int, default = 80, help="amount to prune"
 )
 parser.add_argument(
-    "--trial", type = int, default = 3, help="trial/experiment number"
+    "--trial", type = int, default = 4, help="trial/experiment number"
 )
 parser.add_argument(
     "--k", type = int, default = 0, help="partial-train epochs"
@@ -48,17 +48,17 @@ if parse_args.reinit:
     EXP_PATH = EXP_PATH + '_reinit'
 Path(EXP_PATH).mkdir(parents=True, exist_ok=True)
 
-EXP_PATH_TAR = SPARSITY_PATH + "/trial_2_may19"  # to get already existing tars
+# EXP_PATH_TAR = SPARSITY_PATH + "/trial_2_may19"  # to get already existing tars
 
-TRAINED_SNIP_PATH = EXP_PATH_TAR + "/trained_snip_mlp.tar"
-TRAINED_RAND_PATH = EXP_PATH_TAR + "/trained_rand_mlp.tar"
-TRAINED_LTH_PATH = EXP_PATH_TAR + "/trained_lth_mlp.tar"
-TRAINED_DCN_PATH = EXP_PATH_TAR + "/trained_dcn_mlp.tar"
+TRAINED_SNIP_PATH = EXP_PATH + "/trained_snip_mlp.tar"
+TRAINED_RAND_PATH = EXP_PATH + "/trained_rand_mlp.tar"
+TRAINED_LTH_PATH = EXP_PATH + "/trained_lth_mlp.tar"
+TRAINED_DCN_PATH = EXP_PATH + "/trained_dcn_mlp.tar"
 TRAINED_HEUR_PATH = EXP_PATH + "/trained_heur_mlp.tar"
 BEST_MASK_PATH = EXP_PATH + "/best_mask_mlp.pth"  # achieved highest ave acc
 PLOT_PATH = EXP_PATH + "/SA_plot.pdf"  # plot of SA optimization
 
-FINE_TUNE = False  # boolean, set to False when saved models are present
+FINE_TUNE = True  # boolean, set to False when saved models are present
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Import Dataset & Args
@@ -336,6 +336,7 @@ if parse_args.reinit:
 
 apply_mask_from_vector(model, new_masks, DEVICE)
 
+k_acc = -1
 if parse_args.k > 0:
     print("\n===== Partial ({}) Training SA Model =====".format(parse_args.k))
     optimizer = optim.Adadelta(model.parameters(), lr=args.lr)
@@ -461,7 +462,7 @@ while total_iters < 80000:
         torch.save(
             {
                 "untrained_state_dict": model.state_dict(),
-                "heur_mask": prev_masks,  # may make this a list compre
+                "heur_mask": prev_masks,  
                 "k": parse_args.k,
                 "ave_acc": ave_acc,
                 "iter": total_iters,
@@ -524,6 +525,7 @@ print(
     time.strftime("%H:%M:%S", time.gmtime(elapsed_time)),
 )
 print("\tTotal Iterations:", total_iterations)
+print("\tk_acc:", k_acc)
 print("\tSA ave_acc:", chkpt["ave_acc"])
 print("\tUntrained Accuracy:", untrained_acc)
 print("\tBest Trained Accuracy:", max(accs))

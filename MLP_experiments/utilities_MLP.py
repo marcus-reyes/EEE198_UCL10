@@ -350,7 +350,6 @@ def apply_mask_from_list(model, mask_list):
 
     for idx, layer in enumerate(model.children()):
         if type(layer) == MaskedLinear:
-            print(idx)
             layer.mask = mask_list[idx].clone().detach().to(DEVICE)
 
 
@@ -493,7 +492,7 @@ def apply_mask(model, mask_type, sparsity, train_loader, trained_model=None):
         keep_masks = []
         for i, g in enumerate(grads_abs):
             keep_masks.append(((g / norm_factor) >= acceptable_score).float())
-            print(i, ":", keep_masks[i].sum() / keep_masks[i].numel())
+            # print(i, ":", keep_masks[i].sum() / keep_masks[i].numel())
 
         snip_model = type(model)()  # create new instance of the model
         snip_model.load_state_dict(model.state_dict())  # copy state_dict
