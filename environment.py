@@ -702,10 +702,10 @@ class PruningEnv:
         """Resets CNN to first initialization"""
 
         self.model.load_state_dict(
-            torch.load(os.getcwd() + "/init_may_21_num_2.pth")["state_dict"]
+            torch.load(os.getcwd() + "/init_may_24_num_4.pth")["state_dict"]
         )
         self.optimizer.load_state_dict(
-            torch.load(os.getcwd() + "/init_may_21_num_2.pth")["optim"]
+            torch.load(os.getcwd() + "/init_may_24_num_4.pth")["optim"]
         )
         # initialize starting layer to process
         self.layer = self.layers_to_prune[0]
