@@ -48,9 +48,11 @@ files = {'SA1': EXT_PATH + '/seed_42_best_SA_mask.pth',
 
 # 2d similarity matrices
 masks = []
-for criterion, filename in files.items():
+for i, (criterion, filename) in enumerate(files.items()):
     chkpt = torch.load(filename,map_location=DEVICE)
     if 'seed' in filename:
+        if i == 0:
+            masks.append(chkpt['init_SA_mask'])
         masks.append(chkpt['best_SA_mask'])
     else:
         mask  = torch.cat(
@@ -63,7 +65,7 @@ masks = torch.stack(masks,dim=0)
 masks_t = torch.transpose(masks,0,1)
 similarity = cosine_similarity(masks, masks_t)*100
 
-labels = list(files.keys())
+labels = ['init_SA'] + list(files.keys())
 with pd.option_context(
         'display.max_rows', None, 
         'display.max_columns', None, 
