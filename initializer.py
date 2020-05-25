@@ -19,11 +19,11 @@ import argparse
 from collections import deque
 
 
-xp_num_ = 3
+xp_num_ = 4
 
 env = PruningEnv()
 
-PATH = os.getcwd() + '/init_may_21_num_' + str(xp_num_) + '.pth'
+PATH = os.getcwd() + '/init_may_24_num_' + str(xp_num_) + '.pth'
 model_dicts = {'state_dict': env.model.state_dict(),
         'optim': env.optimizer.state_dict()}
 torch.save(model_dicts, PATH)

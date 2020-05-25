@@ -9,7 +9,7 @@ DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 class MaskedLinear(nn.Linear):
     """Custom layer to allow layer masking """
 
-    def __init__(self, in_features, out_features, bias=True):
+    def __init__(self, in_features, out_features, bias=False):
         super(MaskedLinear, self).__init__(in_features, out_features, bias)
         self.mask = torch.ones_like(self.weight.data, device=DEVICE)
 

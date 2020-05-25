@@ -294,19 +294,18 @@ def get_mask_mag_increase(init_weights, final_weights, prune_percent):
 def get_mask_mag_sign(init_weights, final_weights, prune_percent):
     """Mask based on highest magnitude that didn't change signs"""
 
-    weights = torch.abs(final_weights)
-    flat_weights = torch.flatten(weights)
-    k = int(len(flat_weights) * prune_percent)
-    vals, _ = torch.topk(
-        flat_weights, k, largest=False
-    )  # return smallest first
-    thresh = vals[-1]  # get k_th highest element
-    mag_mask = torch.gt(weights, thresh).type(torch.float)
-
     sign_weights = final_weights * init_weights
     sign_mask = (sign_weights >= 0).type(torch.float)
 
-    mask = mag_mask * sign_mask
+    # weights assumed flat, only include weights with constant sign
+    flat_weights = torch.abs(final_weights) * sign_mask 
+    k = int(len(flat_weights) * prune_percent)
+    vals, _ = torch.topk(
+        flat_weights, k, largest=False
+    )  # return smallest first, among those whose sign didn't change
+    thresh = vals[-1]  # get k_th highest element
+
+    mask = torch.gt(flat_weights, thresh).type(torch.float)
 
     return mask
 
@@ -350,7 +349,6 @@ def apply_mask_from_list(model, mask_list):
 
     for idx, layer in enumerate(model.children()):
         if type(layer) == MaskedLinear:
-            print(idx)
             layer.mask = mask_list[idx].clone().detach().to(DEVICE)
 
 
@@ -493,7 +491,7 @@ def apply_mask(model, mask_type, sparsity, train_loader, trained_model=None):
         keep_masks = []
         for i, g in enumerate(grads_abs):
             keep_masks.append(((g / norm_factor) >= acceptable_score).float())
-            print(i, ":", keep_masks[i].sum() / keep_masks[i].numel())
+            # print(i, ":", keep_masks[i].sum() / keep_masks[i].numel())
 
         snip_model = type(model)()  # create new instance of the model
         snip_model.load_state_dict(model.state_dict())  # copy state_dict

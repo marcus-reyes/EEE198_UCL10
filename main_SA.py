@@ -231,21 +231,22 @@ while temp_changes != args.max_temp_changes:
 
     # Logging progress on stdout
     elapsed_time = time.time() - start_time
-    print("-------------------------------------------------")
-    print("TIME", time.strftime("%H:%M:%S", time.gmtime(elapsed_time)))
-    print("ITER:", total_iter_count)
-    print("TEMP CHANGES:", temp_changes)
-    print("\tAVE ACC:", ave_acc)
-    print(
-        "\tSTEPS down-up-no: {:.2f}% - {:.2f}% - {:.2f}%".format(
-            (down_steps / int(iter_per_temp)) * 100,
-            (up_steps / int(iter_per_temp)) * 100,
-            (no_steps / int(iter_per_temp)) * 100,
+    if temp_changes in ([0,250,500,999]):
+        print("-------------------------------------------------")
+        print("TIME", time.strftime("%H:%M:%S", time.gmtime(elapsed_time)))
+        print("ITER:", total_iter_count)
+        print("TEMP CHANGES:", temp_changes)
+        print("\tAVE ACC:", ave_acc)
+        print(
+            "\tSTEPS down-up-no: {:.2f}% - {:.2f}% - {:.2f}%".format(
+                (down_steps / int(iter_per_temp)) * 100,
+                (up_steps / int(iter_per_temp)) * 100,
+                (no_steps / int(iter_per_temp)) * 100,
+            )
         )
-    )
-    print("\tHAM_DIST:", ham_dist)
-    print("\tTEMP:", temp)
-    print("\tITER_p_TEMP:", iter_per_temp)
+        print("\tHAM_DIST:", ham_dist)
+        print("\tTEMP:", temp)
+        print("\tITER_p_TEMP:", iter_per_temp)
     down_steps, up_steps, no_steps = 0, 0, 0
 
     # Logging data with tensorboard
