@@ -105,7 +105,8 @@ log_file.close()
 
 model_dicts = {'state_dict': env.model.state_dict(),
         'optim': env.optimizer.state_dict(),
-        'kept_indices' : torch.where(mag_sign_mask == 1)}
+        'kept_indices' : torch.where(mag_sign_mask == 1),
+        'mask_applied' : mag_sign_mask}
 torch.save(model_dicts, PATH)
 
 

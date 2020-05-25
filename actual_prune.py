@@ -38,23 +38,19 @@ def actual_prune(path_from, path_to):
     env.model.load_state_dict(torch.load(path_from)['state_dict'])
     env.optimizer.load_state_dict(torch.load(path_from)['optim']) 
     print("accuracy is ", env._evaluate_model())
+    
+    
+    mask_applied = torch.load(path_from)['mask_applied']
     layer_mask = [] #list
     num_per_layer = []
-    for module in env.model.modules():
-        #for conv2d obtain the filters to be kept.
-        if isinstance(module, nn.BatchNorm2d):
-            weight_copy = module.weight.data.clone()
-            filter_mask = weight_copy.gt(0.0).float()
-            #print(filter_mask)
-            #print(weight_copy)
-            layer_mask.append(filter_mask)
-
-
-
-    for i, item in enumerate(layer_mask):
-        ###Have to use.item for singular element tensors to extract the element
-        ###Have to use int()
-        num_per_layer.append(int(item.sum().item()))
+    
+    
+    idx = 0 
+    for i, item in enumerate(env.layer_filters):
+        print("i item", i, item)
+        layer_mask.append(mask_applied[idx:idx + item].clone())
+        num_per_layer.append(int(mask_applied[idx:idx+item].sum()))
+        idx = idx + item
         
     print(num_per_layer)
     newmodel = PrunedSubnet(filter_counts = num_per_layer)
