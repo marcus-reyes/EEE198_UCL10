@@ -43,7 +43,7 @@ def mask_prune_train(xp_num_, ratio_prune, method_list, k_epoch):
 
 if __name__ == '__main__':
 
-    xp_num_list = [1000]
+    xp_num_list = [2000]
     ratio_prune_list = [0.5]
     method_list = ["SA", "rand", "mag_rewind", "mag_sign_rewind"]
     SA_list = ["SA"]

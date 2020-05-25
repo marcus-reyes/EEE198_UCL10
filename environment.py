@@ -485,8 +485,7 @@ class PruningEnv:
                 total += target.size(0)
         
         
-        print("Correct", correct)
-        print("total", total)
+
         return correct / total   
         
     def maskbuildbias(self, indices, num_filters):
