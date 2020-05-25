@@ -118,7 +118,7 @@ def get_ham_dist(model1, model2, vs_string):
 # ==================== Functions for Model-to-Prune ==========================
 
 
-def train(args, model, device, train_loader, optimizer, epoch):
+def train(args, model, device, train_loader, optimizer, epoch, writer=None):
     """One epoch training"""
 
     model.train()
@@ -142,6 +142,14 @@ def train(args, model, device, train_loader, optimizer, epoch):
                     loss.item(),
                 )
             )
+            if writer is not None:
+                writer.add_scalar(
+                        "loss", 
+                        loss.item(), 
+                        # 60k test samples
+                        epoch*int(60000/args.batch_size) + batch_idx 
+                )
+
 
 
 def test(args, model, device, test_loader, verbose=True):
