@@ -52,7 +52,7 @@ parser.add_argument(
     "--k_epoch", type = int, default = 5, help = "which k to reset to"
 )
 parser.add_argument(
-    "--entire_eval_flag", type = int, default = 1, help = "1 if entire"
+    "--entire_eval_flag", type = int, default = 0, help = "1 if entire"
 )
 
 args = parser.parse_args()

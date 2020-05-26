@@ -62,7 +62,7 @@ final_mag_mask[final_mag_rank[1]] = 0
 
 
 #Reset to initialization before applying
-env.reset_to_k_90()
+env.reset_to_init_1()
 env.apply_mask(final_mag_mask)
 print(env._evaluate_model(),"First")
 
