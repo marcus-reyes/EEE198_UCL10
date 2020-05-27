@@ -71,5 +71,7 @@ with pd.option_context(
         'display.max_columns', None, 
         'display.expand_frame_repr', False
      ):
-    print(pd.DataFrame(similarity.numpy(), columns=labels, index=labels))
+    df = pd.DataFrame(similarity.cpu().numpy(), columns=labels, index=labels)
+    print(df)
+    df.to_csv(EXT_PATH + '/similarity_matrix.csv')
 
