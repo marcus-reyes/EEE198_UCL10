@@ -87,7 +87,7 @@ writer = SummaryWriter(
     + str(args.method))
 )
 
-
+start_acc = pruned_subnet.evaluate(env.test_dl)
 start = time.time()
 for n_iter in range(90):
     if n_iter in ([30,60]):
@@ -111,8 +111,25 @@ print(best_val_acc)
 
 if not os.path.exists('trained_may_exp'):
     os.makedirs('trained_may_exp')
-    
-    
+
+#Log best acc
+log_file = open(
+    "textlogs/exp_"
+    + str(args.xp_num_)
+    + "_sparsity_"
+    + str(int(args.ratio_prune*100))
+    + ".txt", "a"
+)   
+log_file.write(
+    str("start_acc: " + str(start_acc) + "\n")
+)
+
+
+log_file.write(
+    str("best_trained_acc: " + str(best_val_acc) + "\n")
+)
+
+log_file.close()
 PATH_to = (
     os.getcwd()
     + "/trained_may_exp/SA_exp"

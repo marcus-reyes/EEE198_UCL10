@@ -70,7 +70,7 @@ mag_sign_mask = torch.ones(total_filters_count)
 mag_sign_mask[mag_sign_rank[1]] = 0
 
 #Reset to initialization before applying
-env.reset_to_k_90()
+env.reset_to_init_1()
 env.apply_mask(mag_sign_mask)
 print(env._evaluate_model(),"First")
 
@@ -105,7 +105,8 @@ log_file.close()
 
 model_dicts = {'state_dict': env.model.state_dict(),
         'optim': env.optimizer.state_dict(),
-        'kept_indices' : torch.where(mag_sign_mask == 1)}
+        'kept_indices' : torch.where(mag_sign_mask == 1),
+        'mask_applied' : mag_sign_mask}
 torch.save(model_dicts, PATH)
 
 

@@ -92,6 +92,7 @@ log_file.close()
 
 model_dicts = {'state_dict': env.model.state_dict(),
         'optim': env.optimizer.state_dict(),
-        'kept_indices' : torch.where(random_mask == 1)}
+        'kept_indices' : torch.where(random_mask == 1),
+        'mask_applied' : random_mask}
 torch.save(model_dicts, PATH)
 

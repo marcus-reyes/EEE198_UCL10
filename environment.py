@@ -465,7 +465,29 @@ class PruningEnv:
                 correct += pred.eq(target.view_as(pred)).sum().item()
 
         return 100.0 * correct / (num_of_batches * self.valid_dl.batch_size)
+        
+    def forward_pass_entire(self):
+        """Forward pass on n batches"""
 
+        self.model.eval()
+        test_loss = 0
+        correct = 0
+        total = 0
+        with torch.no_grad():
+            for idx, data_target in enumerate(self.valid_dl):
+                data, target = data_target
+                data, target = data.to(self.device), target.to(self.device)
+                output = self.model(data)
+                test_loss += F.nll_loss(output, target, reduction="sum").item()
+                # get the index of the max log-probability
+                pred = output.argmax(dim=1, keepdim=True)
+                correct += pred.eq(target.view_as(pred)).sum().item()
+                total += target.size(0)
+        
+        
+
+        return correct / total   
+        
     def maskbuildbias(self, indices, num_filters):
         """Builds a mask for the bias of the layer to be pruned.
 
@@ -636,6 +658,8 @@ class PruningEnv:
                         # print(param.data,"after")
                 iter_ = iter_ + 1
             if type(layer) == nn.BatchNorm2d:
+            
+                ###Works on both bias and multiplicand
                 for i, param in enumerate(layer.parameters()):
                     if iterbn == layer_number:
                         size = param.size()
@@ -669,12 +693,12 @@ class PruningEnv:
         """Resets CNN to partially trained net w/ trained params"""
 
         self.model.load_state_dict(
-            torch.load(os.getcwd() + "/may_21_init_2_trained_90.pth")[
+            torch.load(os.getcwd() + "/may_21_init_3_trained_90.pth")[
                 "state_dict"
             ]
         )
         self.optimizer.load_state_dict(
-            torch.load(os.getcwd() + "/may_21_init_2_trained_90.pth")[
+            torch.load(os.getcwd() + "/may_21_init_3_trained_90.pth")[
                 "optim"
             ]
         )
@@ -702,10 +726,10 @@ class PruningEnv:
         """Resets CNN to first initialization"""
 
         self.model.load_state_dict(
-            torch.load(os.getcwd() + "/init_may_24_num_4.pth")["state_dict"]
+            torch.load(os.getcwd() + "/init_may_21_num_3.pth")["state_dict"]
         )
         self.optimizer.load_state_dict(
-            torch.load(os.getcwd() + "/init_may_24_num_4.pth")["optim"]
+            torch.load(os.getcwd() + "/init_may_21_num_3.pth")["optim"]
         )
         # initialize starting layer to process
         self.layer = self.layers_to_prune[0]
@@ -781,10 +805,10 @@ class PruningEnv:
         """Resets CNN to first initialization"""
 
         self.model.load_state_dict(
-            torch.load(os.getcwd() + "/may_21_init_2_trained_5.pth")["state_dict"]
+            torch.load(os.getcwd() + "/may_21_init_3_trained_5.pth")["state_dict"]
         )
         self.optimizer.load_state_dict(
-            torch.load(os.getcwd() + "/may_21_init_2_trained_5.pth")["optim"]
+            torch.load(os.getcwd() + "/may_21_init_3_trained_5.pth")["optim"]
         )
         # initialize starting layer to process
         self.layer = self.layers_to_prune[0]

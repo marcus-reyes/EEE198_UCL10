@@ -51,6 +51,10 @@ parser.add_argument(
 parser.add_argument(
     "--k_epoch", type = int, default = 5, help = "which k to reset to"
 )
+parser.add_argument(
+    "--entire_eval_flag", type = int, default = 0, help = "1 if entire"
+)
+
 args = parser.parse_args()
 xp_num_ = args.xp_num_
 
@@ -91,7 +95,7 @@ mask_rank = torch.topk(
 mask = torch.ones((env.total_filters))
 mask[mask_rank[1]] = 0
 current_mask = mask
-
+best_mask = current_mask
 # Iteration variables
 temp_changes = 0  # counter accept temp changes
 total_iter_count = 0  # iters including multiple loops within a temp change
@@ -204,7 +208,11 @@ while temp_changes != args.max_temp_changes:
         env.apply_mask(new_mask)
 
         # Check if keep or discard
-        new_acc = env.forward_pass(args.num_batches)
+        if args.entire_eval_flag == 1:
+            new_acc = env.forward_pass_entire()
+            new_acc = new_acc * 100
+        else:
+            new_acc = env.forward_pass(args.num_batches)
         ave_acc = sum(accs) / len(accs)
         acc_delta = (ave_acc - new_acc) / 100
         if acc_delta < 0:
@@ -305,6 +313,11 @@ else:
 env.apply_mask(best_mask)
 k_epoch_accuracy = env._evaluate_model()
 
+if args.entire_eval_flag == 1:
+    k_epoch_forpass = env.forward_pass_entire()
+    k_epoch_forpass = k_epoch_forpass * 100
+else:
+    k_epoch_forpass = env.forward_pass(args.num_batches) 
 
 
 # Prune with the best mask
@@ -313,19 +326,17 @@ env.reset_to_init_1()
 env.apply_mask(best_mask)
 
 ###Check the amount per layer
-###Record the per layer_mask
-layer_mask = []
+layer_mask = [] #list
 num_per_layer = []
-for module in env.model.modules():
-    # for conv2d obtain the filters to be kept.
-    if isinstance(module, nn.BatchNorm2d):
-        weight_copy = module.weight.data.clone()
-        filter_mask = weight_copy.gt(0.0).float()
-        layer_mask.append(filter_mask)
 
-for i, item in enumerate(layer_mask):
-    num_per_layer.append(int(item.sum().item()))
 
+idx = 0 
+for i, item in enumerate(env.layer_filters):
+    print("i item", i, item)
+    layer_mask.append(best_mask[idx:idx + item].clone())
+    num_per_layer.append(int(best_mask[idx:idx+item].sum()))
+    idx = idx + item
+    
 print("Filters per layer:", num_per_layer)
 print("Total", sum(num_per_layer))
 
@@ -352,7 +363,12 @@ torch.save(model_dicts, PATH)
 
 ###End of run details
 final_acc = env._evaluate_model()
-final_forpass = env.forward_pass(args.num_batches)
+# Check if keep or discard
+if args.entire_eval_flag == 1:
+    final_forpass = env.forward_pass_entire()
+    final_forpass = final_forpass * 100
+else:
+    final_forpass = env.forward_pass(args.num_batches)
 elapsed_time = time.time() - start_time
 formatted_time = time.strftime("%H:%M:%S", time.gmtime(elapsed_time))
 writer.close()
@@ -368,6 +384,7 @@ log_file = open(
 total_down_steps = total_down_steps / total_iter_count
 total_up_steps = total_up_steps / total_iter_count
 total_no_steps = total_no_steps / total_iter_count
+log_file.write(str("entire_eval_flag: " + str(args.entire_eval_flag) + "\n"))
 log_file.write(str("down_steps: " + str(total_down_steps) + "\n"))
 log_file.write(str("up_steps: " + str(total_up_steps) + "\n"))
 log_file.write(str("no_steps: " + str(total_no_steps) + "\n"))
@@ -380,10 +397,17 @@ log_file.write(str("final_structure: " + str(num_per_layer) + "\n"))
 log_file.write(
     str("last_ave_acc: " + str(ave_acc) + "\n")
 )
+log_file.write(
+    str("best_ave_acc: " + str(best_ave_acc) + "\n")
+)
+
 log_file.write(str("evaluated_accuracy: " + str(final_acc) + "\n"))
 log_file.write(str("forwardpass_accuracy: " + str(final_forpass) + "\n"))
 log_file.write(
     str("k_epoch_acc: " + str(k_epoch_accuracy) + "\n")
+)
+log_file.write(
+    str("k_epoch_forpass: " + str(k_epoch_forpass) + "\n")
 )
 log_file.write(str("time: " + str(formatted_time) + "\n"))
 
