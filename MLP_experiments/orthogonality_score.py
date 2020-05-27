@@ -1,96 +1,86 @@
 # Import libraries
+import os
 import torch
+import argparse
 from networks_MLP import *
 from utilities_MLP import *
 
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+parser = argparse.ArgumentParser()
+parser.add_argument(
+    "--ratio_prune", type=int, default=80, help="sparsity of masks to test"
+)
+parser.add_argument(
+    "--trial", type=int, default=42, help="trial/experiment number"
+)
 
-def orthogonality(layer): # single layer for now
-    with torch.no_grad():
-        square = (torch.t(layer.weight*layer.mask) @ (layer.weight*layer.mask))
-        identity = torch.eye(layer.weight.size(1)) # 784x784
-        loss = torch.mean((square.to(device) - identity.to(device))**2)
+def orthogonality(layer,device,no_grad=True): # single layer 
+    if no_grad:
+        torch.set_grad_enabled(False)
+
+    square = (torch.t(layer.weight*layer.mask) @ (layer.weight*layer.mask))
+    identity = torch.eye(layer.weight.size(1)) # 784x784
+    loss = torch.mean((square.to(device) - identity.to(device))**2)
+
+    torch.set_grad_enabled(True) # revert back just in case
 
     return loss 
 
-# Load masks and init weight
-file_names = {'heur' : 'best_mask_mlp.pth',
-              'snip' : 'trained_snip_mlp.tar',
-              'dcn' : 'trained_dcn_mlp.tar',
-              'lth' : 'trained_lth_mlp.tar',
-              'rand' : 'trained_rand_mlp.tar'}
+def compute_many_OS(file_names,device):
+    """ Computes (per layer) Orthogonality Scores of (masked) models.
+        See Signal Prop Perspective, Lee et al. 2020
+    """
 
-for name, file_name in file_names.items():
-    chkpt = torch.load('./sparsity_90/trial_5/'+file_name, map_location=device)
-    for key in chkpt.keys():
-        if 'mask' in key:
-            model = DeconsNet()
-            model.load_state_dict(list(chkpt.values())[0])
+    # get any initialization (all are same)
+    init_weights = torch.load(
+                        files["lth"], map_location=device)["init_state_dict"]
+
+    for mask_type, filename in file_names.items():
+        model = DeconsNet()
+        model.load_state_dict(init_weights)
+        print(mask_type)
+
+        sparsity = 0
+        if filename is not None:
+            chkpt = torch.load(filename, map_location=device)
+
+            key = [k for k in chkpt.keys() if "mask" in k][0]
+
             on = sum([x.sum() for x in chkpt[key]])
             elems = sum([x.numel() for x in chkpt[key]])
-            print(key)
-            print('ratio:',on/elems)
+            sparsity = 1. - (on/elems).item()
 
             if 'heur' in key:
-                apply_mask_from_vector(model,chkpt[key],DEVICE)
+                apply_mask_from_vector(model,chkpt[key],device)
             else:
                 apply_mask_from_list(model,chkpt[key])
 
-            os = []
-            for layer in model.children():
-                os.append(orthogonality(layer).item())
-            print('\tOrthogonality:',os,':',sum(os))
+        print('\tSparsity:',sparsity)
+        os = []
+        for layer in model.children():
+            os.append(orthogonality(layer, device).item())
+        print('\tOrthogonality:',os,':',sum(os))
 
-print('=========')
-# Import Dataset & Args
-class arguments:
-    def __init__(
-        self,
-        batch_size=64,
-        test_batch_size=1000,
-        epochs=0,
-        lr=1,
-        gamma=0.7,
-        seed=42,
-        log_interval=6000,
-    ):
+if __name__ == '__main__':
+    args = parser.parse_args()
 
-        self.batch_size = batch_size
-        self.test_batch_size = test_batch_size
-        self.epochs = epochs
-        self.lr = lr
-        self.gamma = gamma
-        self.seed = seed
-        self.log_interval = log_interval
+    # Load masks and init weight
+    EXP_PATH = (
+        os.getcwd()
+        + "/sparsity_"
+        + str(args.ratio_prune)
+        + "/trial_"
+        + str(args.trial)
+    )
 
+    # filenames
+    files = {
+        "snip": EXP_PATH + "/trained_snip_mlp.tar",
+        "rand": EXP_PATH + "/trained_rand_mlp.tar",
+        "lth": EXP_PATH + "/trained_lth_mlp.tar",
+        "dcn": EXP_PATH + "/trained_dcn_mlp.tar",
+        "SA": EXP_PATH + "/trained_heur_mlp.tar",
+        "full": None,
+    }
 
-args = arguments()
-#kwargs = {"num_workers": 1, "pin_memory": True} if use_cuda else {}
-torch.manual_seed(args.seed)
-
-import copy
-chkpt = torch.load('./sparsity_80/trial_5/trained_dcn_mlp.tar',
-                    map_location=device)
-model = DeconsNet()
-trained_model = copy.deepcopy(model)
-model.load_state_dict(chkpt['init_state_dict'])
-trained_model.load_state_dict(chkpt['trained_state_dict'])
-model = apply_mask(model,'mag_sign',0.8, None, trained_model)
-on = 0
-elems = 0
-for child in model.children():
-    on += child.mask.sum()
-    elems += child.mask.numel()
-print(on)
-print(elems)
-print(on/elems)
-mask = chkpt['mag_sign_mask']
-ons = [x.sum() for x in mask]
-on = sum(ons)
-elems = sum([x.numel() for x in mask])
-print(key)
-print(ons)
-print(on)
-print(elems)
-print(on/elems)
-
+    compute_many_OS(files, DEVICE)
