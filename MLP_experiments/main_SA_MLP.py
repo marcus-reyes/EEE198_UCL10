@@ -126,7 +126,7 @@ test_loader = torch.utils.data.DataLoader(
 ## General Pruning
 model = DeconsNet().to(DEVICE)  # network to work on
 sparsity = SPARSITY / 100.0  # pruning sparsity
-args.epochs = 1 # used as epochs to fine tune pruned models
+args.epochs = 50 # used as epochs to fine tune pruned models
 
 ## Simulated Annealing Search
 # ham_dist value derived from mask sparsity later on
@@ -387,7 +387,7 @@ SA_loader = torch.utils.data.DataLoader(
 # SA loop
 # torch.manual_seed(42)
 start_time = time.time()
-while total_iters < 2000:  
+while total_iters < 100000:  
     for _ in range(int(iter_per_temp)):
         # new_masks = step_from([prev_masks],ham_dist)[0]
         for _ in range(mem_size):
