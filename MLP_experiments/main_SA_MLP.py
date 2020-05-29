@@ -126,7 +126,7 @@ test_loader = torch.utils.data.DataLoader(
 ## General Pruning
 model = DeconsNet().to(DEVICE)  # network to work on
 sparsity = SPARSITY / 100.0  # pruning sparsity
-args.epochs = 50 # used as epochs to fine tune pruned models
+args.epochs = 1 # used as epochs to fine tune pruned models
 
 ## Simulated Annealing Search
 # ham_dist value derived from mask sparsity later on
@@ -387,7 +387,7 @@ SA_loader = torch.utils.data.DataLoader(
 # SA loop
 # torch.manual_seed(42)
 start_time = time.time()
-while total_iters < 80000:  
+while total_iters < 2000:  
     for _ in range(int(iter_per_temp)):
         # new_masks = step_from([prev_masks],ham_dist)[0]
         for _ in range(mem_size):
@@ -480,7 +480,7 @@ while total_iters < 80000:
     if ave_acc > best_ave_acc:
         torch.save(
             {
-                "untrained_state_dict": model.state_dict(),
+                "init_state_dict": model.state_dict(),
                 "init_SA_mask": init_SA_mask,
                 "best_SA_mask": prev_masks,  
                 "k": parse_args.k,
@@ -507,7 +507,7 @@ DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 chkpt = torch.load(BEST_MASK_PATH, map_location=DEVICE)
 print("\nLoaded heuristic model with ave acc:", chkpt["ave_acc"])
 partial_k = chkpt["k"]
-model.load_state_dict(chkpt["untrained_state_dict"])
+model.load_state_dict(chkpt["init_state_dict"])
 apply_mask_from_vector(model, chkpt["best_SA_mask"], DEVICE)
 total_iterations = chkpt["iter"]
 model.to(DEVICE)
@@ -524,6 +524,7 @@ for epoch in range(1, args.epochs + 1 - partial_k):
 
 torch.save(
     {
+        "init_state_dict": chkpt["init_state_dict"],
         "trained_state_dict": model.state_dict(),
         "heur_mask": prev_masks,  # may make this a list compre
         "k": parse_args.k,
