@@ -119,8 +119,8 @@ def get_ham_dist(model1, model2, vs_string):
 
 
 def train(args, model, device, train_loader, optimizer, epoch, writer=None,
-        verbose=True):
-    """One epoch training"""
+        verbose=True, k=-1):
+    """One epoch training, or k iterations within an epoch"""
 
     model.train()
 
@@ -151,6 +151,9 @@ def train(args, model, device, train_loader, optimizer, epoch, writer=None,
                         # 60k test samples
                         epoch*int(60000/args.batch_size) + batch_idx 
                 )
+
+        if batch_idx == k: # k iters is less than one epoch
+            break
 
 
 

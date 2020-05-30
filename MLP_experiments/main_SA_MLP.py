@@ -31,13 +31,16 @@ parser.add_argument(
     "--trial", type = int, default = 42, help="trial/experiment number"
 )
 parser.add_argument(
-    "--k", type = int, default = 0, help="partial-train epochs"
+    "--k", type = int, default = 0, help="partial-train iterations"
 )
 parser.add_argument(
     "--reinit", help="change weights to signed constants", action='store_true'
 )
 parser.add_argument(
     "--fine_tune", help="loads trained models when false", action='store_true'
+)
+parser.add_argument(
+    "--same_init", help="when true, loads weight a weight init", action='store_true'
 )
 parser.add_argument("--seed", type = int, default = 42)
 parse_args = parser.parse_args()
@@ -46,23 +49,24 @@ SPARSITY = parse_args.ratio_prune
 SPARSITY_PATH = os.getcwd() + "/sparsity_" + str(SPARSITY)
 TRIAL = parse_args.trial
 EXP_PATH = SPARSITY_PATH + "/trial_" + str(TRIAL)
-if parse_args.k > 0:
-    EXP_PATH = EXP_PATH + '_k_' + str(parse_args.k)
+#if parse_args.k > 0:
+#    EXP_PATH = EXP_PATH + '/_k_' + str(parse_args.k)
 if parse_args.reinit:
     EXP_PATH = EXP_PATH + '_reinit'
 Path(EXP_PATH).mkdir(parents=True, exist_ok=True)
 
 # EXP_PATH_TAR = SPARSITY_PATH + "/trial_2_may19"  # to get already existing tars
 
+INIT_PATH = EXP_PATH + "/init_weights_mlp.tar"
+K_PATH = EXP_PATH + "/k"+str(parse_args.k)+"_weights_mlp.tar"
 TRAINED_SNIP_PATH = EXP_PATH + "/trained_snip_mlp.tar"
 TRAINED_RAND_PATH = EXP_PATH + "/trained_rand_mlp.tar"
 TRAINED_LTH_PATH = EXP_PATH + "/trained_lth_mlp.tar"
 TRAINED_DCN_PATH = EXP_PATH + "/trained_dcn_mlp.tar"
-TRAINED_HEUR_PATH = EXP_PATH + "/trained_heur_mlp.tar"
 TRAINED_FULL_PATH = EXP_PATH + "/trained_full_mlp.tar"
-# achieved highest ave acc
-BEST_MASK_PATH = EXP_PATH+"/seed_"+str(parse_args.seed)+"_best_SA_mask.pth"  
-# plot of SA optimization
+
+TRAINED_HEUR_PATH = EXP_PATH +"/seed_"+str(parse_args.seed)+"_trained_heur_mlp.tar"
+BEST_MASK_PATH = EXP_PATH +"/seed_"+str(parse_args.seed)+"_best_SA_mask.pth"
 PLOT_PATH = EXP_PATH+"/seed_"+str(parse_args.seed)+"_SA_plot.pdf"  
 
 FINE_TUNE = parse_args.fine_tune  
@@ -86,7 +90,6 @@ class arguments:
         self.lr = lr
         self.gamma = gamma
         self.log_interval = log_interval
-
 
 args = arguments()
 #kwargs = {"num_workers": 1, "pin_memory": True} if use_cuda else {}
@@ -125,11 +128,15 @@ test_loader = torch.utils.data.DataLoader(
 
 ## General Pruning
 model = DeconsNet().to(DEVICE)  # network to work on
+if parse_args.same_init:
+    model.load_state_dict(torch.load(INIT_PATH))
+else:
+    torch.save(model.state_dict(), INIT_PATH)
 sparsity = SPARSITY / 100.0  # pruning sparsity
 args.epochs = 50 # used as epochs to fine tune pruned models
 
 ## Simulated Annealing Search
-# ham_dist value derived from mask sparsity later on
+# ham_dist value derived from mask sparsity later below
 ham_dist_decay = 0.99  # decays search neighborhood size
 acc_temp = 0.006  # uphill accept probability
 acc_temp_decay = 0.999
@@ -158,7 +165,7 @@ untrained_state_dict = copy.deepcopy(model.state_dict())
 trained_model = type(model)().to(DEVICE)
 trained_model.load_state_dict(model.state_dict())
 full_untrained_acc = test(args, trained_model, DEVICE, test_loader) #unmasked
-full_acc = 0
+full_acc = -1
 if FINE_TUNE:
     print("\n===== Fine Tuning Full Model =====")
     optimizer = optim.Adadelta(trained_model.parameters(), lr=args.lr)
@@ -282,22 +289,17 @@ print("Best Untrained Accuracy:", rand_untrained_acc)
 print("Best Trained Accuracy:", rand_acc)
 print("Trained for:", chkpt["epochs"], "epochs")
 
-
-print("\n======= ! Begin Annealing ! =======\n")
+# Simulated Annealing
 #DEVICE = "cpu"  # use CPU for annealing
 #model.to(DEVICE)
 
 # For logging and other variable initialization:
 ave_acc = 5
 best_ave_acc = ave_acc
-if FINE_TUNE:
-    init_SA_mask = get_mask_mag(
-        torch.rand((1, 784*300 + 300*100 + 100*10)), sparsity
-    )  # note this is a different randmask
-else:
-    chkpt = torch.load(EXP_PATH+'/seed_42_best_SA_mask.pth', map_location=DEVICE)
-    init_SA_mask = chkpt['init_SA_mask']
-prev_masks = init_SA_mask
+prev_masks = get_mask_mag(
+    torch.rand((1, 784*300 + 300*100 + 100*10)), sparsity
+)  # note this is a different randmask
+new_masks = prev_masks  # initialize
 ham_dist = int(prev_masks.sum())
 prev_ham_dist = ham_dist  # for triangular decay
 
@@ -331,20 +333,9 @@ print("\tInit iter/temp:", iter_per_temp)
 print("\n----------------------------")
 print()
 
-# Additional Initial Conditions
-if use_snip_init:
-    print("Loaded initial conditions from SNIP")
-    untrained_state_dict = snip_init_weights
-    # prev_masks = copy.deepcopy(snip_masks) # initial soln
-else:
-    print("Loaded initial conditions from RAND")
-    untrained_state_dict = rand_init_weights
-    # prev_masks = copy.deepcopy(rand_masks) # initial soln
-
 # INITIAL MASK
-new_masks = prev_masks  # initialize
-
 model.load_state_dict(untrained_state_dict)  # copy common init weights
+
 if parse_args.reinit:
     print('Change weights to signed constants')
     for child in model.children():
@@ -353,20 +344,31 @@ if parse_args.reinit:
                                 child.weight.std() * child.weight.sign()
                             )
 
-apply_mask_from_vector(model, new_masks, DEVICE)
-
 k_acc = -1
 if parse_args.k > 0:
-    print("\n===== Partial ({}) Training SA Model =====".format(parse_args.k))
-    optimizer = optim.Adadelta(model.parameters(), lr=args.lr)
-    accs = []
-    for epoch in range(1, parse_args.k + 1):
-        train(args, model, DEVICE, train_loader, optimizer, epoch)
-        accs.append(test(args, model, DEVICE, test_loader))
-    k_acc = max(accs)
+    try:
+        chkpt = torch.load(K_PATH)
+        model.load_state_dict(chkpt['k_state_dict'])
+        k_acc = chkpt['k_acc']
+    except:
+        print(
+            "\n===== Partial {}-iters Training SA Model =====".format(parse_args.k)
+        )
+        optimizer = optim.Adadelta(model.parameters(), lr=args.lr)
+        k_accs = []
+        epoch = 1
+        train(args, model, DEVICE, train_loader, optimizer, epoch, k=parse_args.k)
+        k_accs.append(test(args, model, DEVICE, test_loader))
+        k_acc = max(k_accs)
+        torch.save(
+            {'k_state_dict':model.state_dict(),
+             'k_acc': k_acc
+            },K_PATH
+        )
     print("k-th Accuracy:", k_acc)
-    print("Pre-trained for:", args.epochs, "epochs")
+    print("Pre-trained for:", parse_args.k, "iterations")
 
+apply_mask_from_vector(model, new_masks, DEVICE)
 mask_wrapper = MaskWrapper(new_masks, ham_dist)
 closed_q.append(copy.deepcopy(mask_wrapper))
 
@@ -384,8 +386,7 @@ SA_loader = torch.utils.data.DataLoader(
     # **kwargs
 )
 
-# SA loop
-# torch.manual_seed(42)
+print("\n======= ! Begin Annealing ! =======\n")
 start_time = time.time()
 while total_iters < 100000:  
     for _ in range(int(iter_per_temp)):
@@ -480,8 +481,7 @@ while total_iters < 100000:
     if ave_acc > best_ave_acc:
         torch.save(
             {
-                "init_state_dict": model.state_dict(),
-                "init_SA_mask": init_SA_mask,
+                "init_state_dict": untrained_state_dict,
                 "best_SA_mask": prev_masks,  
                 "k": parse_args.k,
                 "ave_acc": ave_acc,
@@ -506,19 +506,20 @@ DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 # load best found model
 chkpt = torch.load(BEST_MASK_PATH, map_location=DEVICE)
 print("\nLoaded heuristic model with ave acc:", chkpt["ave_acc"])
+apply_mask_from_vector(model, chkpt["best_SA_mask"], DEVICE)
+untrained_acc = test(args, model, DEVICE, test_loader)
 partial_k = chkpt["k"]
 model.load_state_dict(chkpt["init_state_dict"])
-apply_mask_from_vector(model, chkpt["best_SA_mask"], DEVICE)
 total_iterations = chkpt["iter"]
 model.to(DEVICE)
 
 # test rewind accuracy
-untrained_acc = test(args, model, DEVICE, test_loader)
+rewind_acc = test(args, model, DEVICE, test_loader)
 
 print("\n===== Fine Tuning Heuristic Model =====")
 optimizer = optim.Adadelta(model.parameters(), lr=args.lr)
 accs = [0]
-for epoch in range(1, args.epochs + 1 - partial_k):
+for epoch in range(1, args.epochs + 1):
     train(args, model, DEVICE, train_loader, optimizer, epoch)
     accs.append(test(args, model, DEVICE, test_loader))
 
@@ -535,6 +536,7 @@ torch.save(
 )
 
 # Print results to textfile
+print("=========== Importing to textfile ==============\n") #end of stdoutprint
 import sys
 
 sys.stdout = open(EXP_PATH+"/seed_"+str(parse_args.seed)+"_results.txt", "w")
@@ -549,6 +551,7 @@ print("\tTotal Iterations:", total_iterations)
 print("\tk_acc:", k_acc)
 print("\tSA ave_acc:", chkpt["ave_acc"])
 print("\tUntrained Accuracy:", untrained_acc)
+print("\tRewind Accuracy:", rewind_acc)
 print("\tBest Trained Accuracy:", max(accs))
 print("Snip:")
 print("\tUntrained Accuracy:", snip_untrained_acc)
