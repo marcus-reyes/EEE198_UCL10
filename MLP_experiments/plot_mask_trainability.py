@@ -35,6 +35,7 @@ def plot_trainability(
         writer = SummaryWriter(path + "/logs/" + mask_type)
 
         model = DeconsNet()
+        model.to(device)
 
         if filename is not None:
             chkpt = torch.load(filename, map_location=device)

@@ -44,6 +44,7 @@ def mass_ortho_repair(files, path, device, iterations=20000):
 
     for mask_type, filename in files.items():
         model = DeconsNet()
+        model.to(device)
 
         chkpt = torch.load(filename, map_location=device)
         model.load_state_dict(chkpt['untrained_state_dict'])
