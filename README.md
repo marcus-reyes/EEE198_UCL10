@@ -69,7 +69,7 @@ the following experiments:
 ## Summary of Results
 
 ### MLP Experiments
-1. Sample plot of SA search
+1. Sample plot of SA search  
     <insert sample search plot>
     The plot above shows in red the estimated performance of masks tried by SA
     throughout its search process. This specific run prunes 70% of the weights,
@@ -121,7 +121,7 @@ the following experiments:
     empirically proven in CNN experiments.   
 
 ### CNN Experiments
-1. Sample plot of SA search
+1. Sample plot of SA search  
     <insert sample search plot>
     Similar as the plot for CNN; this one shows SA on CNN, selecting
     only 70% of filters. 
@@ -182,6 +182,6 @@ the following experiments:
 [2] [Deconstructing Lottery Ticket](https://github.com/uber-research/deconstructing-lottery-tickets)  
 [3] [AutoML for Model Compression](https://github.com/mit-han-lab/amc-models)  
 [4] [SNIP](https://github.com/namhoonlee/snip-public)  
-[5] [SNIP-2](https://arxiv.org/abs/1906.06307)
+[5] [SNIP-2](https://arxiv.org/abs/1906.06307)  
 [6] [NAS Survey](https://arxiv.org/abs/1808.05377)
 
