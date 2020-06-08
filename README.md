@@ -70,7 +70,7 @@ To evaluate the performance of SA, we run the following experiments:
 
 ### MLP Experiments
 1. <b>Sample plot of SA search</b>  
-    <img src="https://github.com/marcus-reyes/EEE198_UCL10/raw/master/sample_plots/seed_45_SA_plot_k0_90sparse.pdf">
+    <img src="./sample_plots/seed_45_SA_plot_k0_90sparse.svg">
     The plot above shows in red the estimated performance of masks tried by SA
     throughout its search process. This specific run prunes 70% of the weights,
     and the estimated performance is taken with only n-epoch training. Shown in
