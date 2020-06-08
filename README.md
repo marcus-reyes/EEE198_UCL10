@@ -194,7 +194,7 @@ all criterions SA, SA_k, Magnitude (structured-LTH)[1], MagSign
 
 ### Main components
 1. `MLP_experiments/`
-    1. [main_SA_MLP.py](main_SA_MLP.py) MLP masking for SA, SNIP, Deconst, and LTH
+    1. [main_SA_MLP.py](MLP_experiments/main_SA_MLP.py) MLP masking for SA, SNIP, Deconst, and LTH
     2. [utilities_MLP.py](utilities_MLP.py) for masking, SA, and top-level NN functions
     3. [networks_MLP.py]() models used for MLP experiments
 2. For CNN masking:
