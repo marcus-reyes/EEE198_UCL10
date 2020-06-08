@@ -1,4 +1,4 @@
-# EEE 198: Simulated Annealing for Model Compression
+# EEE 198: Heuristic Approach Towards Early Pruning Of Neural Networks
 
 ## Authors
 
@@ -9,7 +9,8 @@ their senior-year project; UCL, UP-Diliman 2020.
 ## Background
 
 This library is the implementation of our thesis project, titled
-"thesis-title-here." Taking inspiration from recent works on lottery tickets
+<em>"Heuristic Approach Towards Early Pruning Of Neural Networks."</em> Taking 
+inspiration from recent works on lottery tickets
 [1,2], Model Compression [3], and Early Pruning [4], we wanted to automate 
 the process of finding high performing and high sparsity subnetworks (winning 
 tickets), without relying on already trained networks. This form of compression
@@ -31,8 +32,8 @@ To evaluate the performance of SA, we run the following experiments:
 
 1. <b>SA on CNN</b>
     1. Mask Search on CNN
-        1. Randomly initialize the neural network (initialization w_<sub>init<\sub>)
-        2. Train for K epochs (K $\in$ [0,90])
+        1. Randomly initialize the neural network (initialization w<sub>init<\sub>)
+        2. Train for K epochs (K within [0,90])
         3. Run SA search
         4. Save best mask found
 
@@ -40,7 +41,7 @@ To evaluate the performance of SA, we run the following experiments:
         1. Load SA-found mask
         2. Load masks generated using other criterion
         3. Apply different masks on multiple network intances (with similar
-           initializations w_<sub>init</sub>)
+           initializations w<sub>init</sub>)
         4. Prune: delete filters based on masks
         5. Save pruned networks
 
@@ -89,7 +90,7 @@ To evaluate the performance of SA, we run the following experiments:
     shed more light in these observations.  
     
 3. <b>Trainability</b>  
-    <insert OS scores>  
+    <insert OS scores, table 5.6>  
     By the virtue of having high orthogonality scores<sup id="a2">[2](#f2)</sup> 
     and slow-moving training loss plots, we concluded that both SA and Random 
     criterion  exhibit  a  more  hampered  training  as  compared  to  other  
@@ -213,11 +214,11 @@ all criterions SA, SA_k, Magnitude (structured-LTH)[1], MagSign
 2. [MNIST](http://yann.lecun.com/exdb/mnist/) for MLP experiments.
 
 ## Footnotes
-<sup id="f1">1</sup> Mask generated using Magnitude-Sign (MagSign), criterion as 
+<sup id="f1">1</sup> mask generated using Magnitude-Sign (MagSign), criterion as 
 defined in Deconstructing Lottery Ticket by Zhou et al [2]. [↩](#a1)  
-<sup id="f2">2</sup>higher OS means less propagation of learning signals [5][↩](#a2)  
-<sup id="f3">3</sup>extreme filter sparsity of 80%, Mag Rewind consistently prunes an
-entire layer and thus has no output.[↩](#a3)   
+<sup id="f2">2</sup> higher OS means less propagation of learning signals [5][↩](#a2)  
+<sup id="f3">3</sup> extreme filter sparsity of 80%, Mag Rewind consistently prunes 
+an entire layer and thus has no output.[↩](#a3)   
 
 
 ## References
