@@ -32,7 +32,7 @@ To evaluate the performance of SA, we run the following experiments:
 
 1. <b>SA on CNN</b>
     1. Mask Search on CNN
-        1. Randomly initialize the neural network (initialization w<sub>init<\sub>)
+        1. Randomly initialize the neural network (initialization w<sub>init</sub>)
         2. Train for K epochs (K within [0,90])
         3. Run SA search
         4. Save best mask found
@@ -70,7 +70,8 @@ To evaluate the performance of SA, we run the following experiments:
 
 ### MLP Experiments
 1. <b>Sample plot of SA search</b>  
-    <insert sample search plot>
+    ![Alt text](./sample_plots/seed_45_SA_plot_k0_90sparse.pdf)
+    <img src="./sample_plots/seed_45_SA_plot_k0_90sparse.pdf">
     The plot above shows in red the estimated performance of masks tried by SA
     throughout its search process. This specific run prunes 70% of the weights,
     and the estimated performance is taken with only n-epoch training. Shown in
@@ -97,7 +98,7 @@ To evaluate the performance of SA, we run the following experiments:
     criteria  which  results in the two attaining sub par final performances.
     Additionally, although we resolved not to extend the OS formula for
     convolutional layers, the training loss plots for CNN showed similar
-    trends. Specifically, Mag criterion more rapidly plummets as compared to SA
+    trends. Specifically, Mag criterion more rapidly slows down as compared to SA
     and Rand, however its rapid downward slope decreases as sparsity is
     increased.  
 
@@ -119,7 +120,8 @@ To evaluate the performance of SA, we run the following experiments:
 
 ### CNN Experiments
 1. <b>Sample plot of SA search</b>  
-    <insert sample search plot>
+    ![Alt text](./sample_plots/ave_acc_CNN_k90_50sparse.svg)
+    <img src="./sample_plots/ave_acc_CNN_k90_50sparse.svg">
     Similar as the plot for CNN; this one shows SA on CNN, selecting
     only 70% of filters. 
 
@@ -141,7 +143,7 @@ To evaluate the performance of SA, we run the following experiments:
 4. <b>Discrepancy on validation and test accuracies</b>  
     To test if the validation set limits the performance of the SA search, we
     experimented on using larger validation set sizes and found that indeed
-    this mehotd of low-fidelity estimation results to a strong bias towards the
+    this method of low-fidelity estimation results to a strong bias towards the
     small validation data.
 
 
@@ -181,7 +183,7 @@ all criterions SA, SA_k, Magnitude (structured-LTH)[1], MagSign
     3. [networks_MLP.py]() models used for MLP experiments
 2. For CNN masking:
     1. [main_SA.py]()
-    2. [main_pruned_mag_rewind.py]()
+    2. [main_pruner_mag_rewind.py]()
     3. [main_pruner_mag_sign_rewind.py]()
     4. [main_pruner_random.py]()
 3. [actual_prune.py]()
@@ -206,8 +208,6 @@ all criterions SA, SA_k, Magnitude (structured-LTH)[1], MagSign
 3. [mask_similarities.py]() compute similarity matrix (works for both CNN and
    MLP)
 
-### Paths and Log-File Folders
-<to follow>
 
 ## Datasets
 1. [CIFAR-10](https://www.cs.toronto.edu/~kriz/cifar.html) for CNN experiments.
