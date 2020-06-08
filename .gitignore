@@ -19,4 +19,5 @@ MLP_experiments/*
 
 sample_plots/*
 !sample_plots/*.svg
+!sample_plots/*.png
 

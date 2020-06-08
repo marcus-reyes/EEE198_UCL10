@@ -70,7 +70,9 @@ To evaluate the performance of SA, we run the following experiments:
 
 ### MLP Experiments
 1. <b>Sample plot of SA search</b>  
+    <p align="center">
     <img src="./sample_plots/seed_45_SA_plot_k0_90sparse.svg" height="300">
+    </p>
     The plot above shows in red the estimated performance of masks tried by SA
     throughout its search process. This specific run prunes 90% of the weights,
     and the estimated performance is taken at initialization (k=0). Shown in
@@ -79,7 +81,9 @@ To evaluate the performance of SA, we run the following experiments:
     space.  
 
 2. <b>Criterion Comparison</b> 
-    <insert table 5.5>  
+    <p align="center">
+    <img src="./sample_plots/MLP.png" height="300"><br/>
+    </p>
     We observe three things from the table above: (1) Across sparsities, SA and 
     Random are consistently the bottom two compared to the rest of the other 
     criteria. (2) The achieved optimized accuracy of SA on the validation set 
@@ -90,7 +94,9 @@ To evaluate the performance of SA, we run the following experiments:
     shed more light in these observations.  
     
 3. <b>Trainability</b>  
-    <insert OS scores, table 5.6>  
+    <p align="center">
+    <img src="./sample_plots/OS.png" height="300">
+    </p>
     By the virtue of having high orthogonality scores<sup id="a2">[2](#f2)</sup> 
     and slow-moving training loss plots, we concluded that both SA and Random 
     criterion  exhibit  a  more  hampered  training  as  compared  to  other  
@@ -119,12 +125,16 @@ To evaluate the performance of SA, we run the following experiments:
 
 ### CNN Experiments
 1. <b>Sample plot of SA search</b>  
+    <p align="center">
     <img src="./sample_plots/ave_acc_CNN_k90_50sparse.svg" height="300">
+    </p>
     Similar as the plot for CNN; this one shows SA on CNN, selecting
     only 50% of filters, at k=90. 
 
 2. <b>Criterion Comparison</b>  
-    <insert table 5.8 from paper>  
+    <p align="center">
+    <img src="./sample_plots/CNN.png" height="300">
+    </p>
     The  data  here  indicates  three  things:   (1) By  itself  SA  performs  
     relatively  well with only around 2% and 6% accuracy drop at 70% and 80% 
     filter sparsity.(2) At the extreme sparsities SA outperforms Mag Rewind 
