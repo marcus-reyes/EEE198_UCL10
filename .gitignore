@@ -9,9 +9,14 @@
 !may_init_1_trained_90.pth
 !may_init_1_trained_5.pth
 !init_may_10_num_1.pth
+!sample_plots/
 
 
 MLP_experiments/*
 !MLP_experiments/*.py
 !MLP_experiments/*.sh
+
+
+sample_plots/*
+!sample_plots/*.svg
 
