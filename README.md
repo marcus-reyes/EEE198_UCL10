@@ -82,7 +82,7 @@ To evaluate the performance of SA, we run the following experiments:
 
 2. <b>Criterion Comparison</b> 
     <p align="center">
-    <img src="./sample_plots/MLP.png" height="300"><br/>
+    <img src="./sample_plots/MLP.png" height="280"><br/>
     </p>
     We observe three things from the table above: (1) Across sparsities, SA and 
     Random are consistently the bottom two compared to the rest of the other 
@@ -95,7 +95,7 @@ To evaluate the performance of SA, we run the following experiments:
     
 3. <b>Trainability</b>  
     <p align="center">
-    <img src="./sample_plots/OS.png" height="300">
+    <img src="./sample_plots/OS.png" height="200">
     </p>
     By the virtue of having high orthogonality scores<sup id="a2">[2](#f2)</sup> 
     and slow-moving training loss plots, we concluded that both SA and Random 
