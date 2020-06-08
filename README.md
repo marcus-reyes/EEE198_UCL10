@@ -168,13 +168,13 @@ python main_script.py
 This will execute 4 runs of [CNN masking -> `actual_prune.py` ->
 `train_actual_subnet.py`], one for each sparsity 50\%, 60\%, 70\%, and 80\% (for 
 all criterions SA, SA_k, Magnitude (structured-LTH)[1], MagSign 
-(structured-Deconst)[2]). `.pth` files will be stored in folders: `masked_may_exp\`, 
-`pruned_may_exp/`, and `trained_may_exp`, and results log in `textlogs/`.
+(structured-Deconst)[2]). `.pth` files will be stored in folders: `masked_may_exp/`, 
+`pruned_may_exp/`, and `trained_may_exp/`, and results log in `textlogs/`.
 
 ## Code Files
 
 ### Main components
-1. MLP_experiments/
+1. MLP_experiments
     1. [main_SA_MLP.py]() MLP masking for SA, SNIP, Deconst, and LTH
     2. [utilities_MLP.py]() for masking, SA, and top-level NN functions
     3. [networks_MLP.py]() models used for MLP experiments
@@ -194,7 +194,7 @@ all criterions SA, SA_k, Magnitude (structured-LTH)[1], MagSign
     4. [models_to_prune.py]() 
 
 ### Analysis Scripts
-1. MLP_experiments/
+1. MLP_experiments
     1. [orthogonality_score.py]() computes OS, as per [5], of all MLP masks
     2. [plot_mask_trainability.py]() runs tensorboard for observing
        trainability in training loss plots
