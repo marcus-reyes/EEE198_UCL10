@@ -174,11 +174,13 @@ the following experiments:
 2. [MNIST](http://yann.lecun.com/exdb/mnist/) for MLP experiments.
 
 ## Footnotes
-<b id="f1">1</b> Mask generated using Magnitude-Sign (MagSign), criterion as 
-defined in Deconstructing Lottery Ticket by Zhou et al [2]. [↩](#a1)
-<b id="f2">1</b>higher OS means less propagation of learning signals [5][↩](#a2)
-<b id="f3">1</b>extreme filter sparsity of 80%, Mag Rewind consistently prunes an 
-entire layer and thus has no output.[↩](#a3)
+<sup id="f1">1</sup> Mask generated using Magnitude-Sign (MagSign), criterion as 
+defined in Deconstructing Lottery Ticket by Zhou et al [2]. [↩](#a1)  
+<sup id="f2">2</sup>higher OS means less propagation of learning signals [5][↩](#a2)  
+<sup id="f3">3</sup>extreme filter sparsity of 80%, Mag Rewind consistently prunes an
+entire layer and thus has no output.[↩](#a3)   
+
+
 ## References
 [1] [Lottery Ticket Hypothesis](https://github.com/google-research/lottery-ticket-hypothesis)  
 [2] [Deconstructing Lottery Ticket](https://github.com/uber-research/deconstructing-lottery-tickets)  
