@@ -49,7 +49,7 @@ To evaluate the performance of SA, we run the following experiments:
         2. Train networks for 90 epochs on CIFAR-10
         3. Save performance logs
 
-2. SA on MLP\
+2. SA on MLP  
     Since only preliminary experiments and analysis were done on MLP, we only
     implemented SA search and masked-pruning (no actual deletion of parameters).
     Similar steps are followed as above, but without actual pruning. 
@@ -83,21 +83,18 @@ the following experiments:
     We observe three things from the table above: (1) Across sparsities, SA and 
     Random are consistently the bottom two compared to the rest of the other 
     criteria. (2) The achieved optimized accuracy of SA on the validation set 
-    is still lower than that of Deconst \footnote{mask generated using 
-    Magnitude-Sign (MagSign), criterion as defined in Deconstructing Lottery 
-    Ticket by Zhou et al \cite{}}. (3) SA has significant discrepancy between 
-    validation accuracy (maximized accuracy on a validation set used in SA 
-    search) and rewind accuracy (test accuracy of the final SA mask applied at
-    initialization). The following empirical analyses shed more light in these
-    observations.  
+    is still lower than that of Deconst<sup id="a1">[1](#f1)</sup>. (3) SA has 
+    significant discrepancy between validation accuracy (maximized accuracy on a 
+    validation set used in SA search) and rewind accuracy (test accuracy of the 
+    final SA mask applied at initialization). The following empirical analyses 
+    shed more light in these observations.  
     
 3. Trainability  
     <insert OS scores>  
-    By the virtue of having high orthogonality scores\footnote{higher OS means 
-    less propagation of learning signals [5]} and slow-moving training
-    loss plots, we concluded that both SA and Random criterion  exhibit  a  more  
-    hampered  training  as  compared  to  other  criteria  which  results in the 
-    two attaining sub par final performances.
+    By the virtue of having high orthogonality scores<sup id="a2">[2](#f2)</sup> 
+    and slow-moving training loss plots, we concluded that both SA and Random 
+    criterion  exhibit  a  more  hampered  training  as  compared  to  other  
+    criteria  which  results in the two attaining sub par final performances.
     Additionally, although we resolved not to extend the OS formula for
     convolutional layers, the training loss plots for CNN showed similar
     trends. Specifically, Mag criterion more rapidly plummets as compared to SA
@@ -131,10 +128,9 @@ the following experiments:
     The  data  here  indicates  three  things:   (1) By  itself  SA  performs  
     relatively  well with only around 2% and 6% accuracy drop at 70% and 80% 
     filter sparsity.(2) At the extreme sparsities SA outperforms Mag Rewind 
-    and performs on par or better than Mag Sign Rewind\footnote{extreme filter 
-    sparsity of 80%, Mag Rewind consistentlyprunes an entire layer and thus has
-    no output.}; (3) Increasing the epoch k wherein the SA algorithm is applied 
-    causes a corresponding consistent increase in the converged accuracy of SA.
+    and performs on par or better than Mag Sign Rewind<sup id="a2">[3](#f3)</sup>; 
+    (3) Increasing the epoch k wherein the SA algorithm is applied causes a 
+    corresponding consistent increase in the converged accuracy of SA.
 
 3. Mask Similarities  
     Similar to the MLP findings, we find that increasing partial-training k 
@@ -177,6 +173,12 @@ the following experiments:
 1. [CIFAR-10](https://www.cs.toronto.edu/~kriz/cifar.html) for CNN experiments.
 2. [MNIST](http://yann.lecun.com/exdb/mnist/) for MLP experiments.
 
+## Footnotes
+<b id="f1">1</b> Mask generated using Magnitude-Sign (MagSign), criterion as 
+defined in Deconstructing Lottery Ticket by Zhou et al [2]. [↩](#a1)
+<b id="f2">1</b>higher OS means less propagation of learning signals [5][↩](#a2)
+<b id="f3">1</b>extreme filter sparsity of 80%, Mag Rewind consistently prunes an 
+entire layer and thus has no output.[↩](#a3)
 ## References
 [1] [Lottery Ticket Hypothesis](https://github.com/google-research/lottery-ticket-hypothesis)  
 [2] [Deconstructing Lottery Ticket](https://github.com/uber-research/deconstructing-lottery-tickets)  
