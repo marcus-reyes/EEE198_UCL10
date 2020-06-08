@@ -75,11 +75,11 @@ if __name__ == '__main__':
 
     # filenames
     files = {
-        "snip": EXP_PATH + "/trained_snip_mlp.tar",
-        "rand": EXP_PATH + "/trained_rand_mlp.tar",
-        "lth": EXP_PATH + "/trained_lth_mlp.tar",
-        "dcn": EXP_PATH + "/trained_dcn_mlp.tar",
         "SA": EXP_PATH + "/trained_heur_mlp.tar",
+        "snip": EXP_PATH + "/trained_snip_mlp.tar",
+        "dcn": EXP_PATH + "/trained_dcn_mlp.tar",
+        "lth": EXP_PATH + "/trained_lth_mlp.tar",
+        "rand": EXP_PATH + "/trained_rand_mlp.tar",
         "full": None,
     }
 

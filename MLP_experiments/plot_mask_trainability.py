@@ -40,7 +40,7 @@ def plot_trainability(
         if filename is not None:
             chkpt = torch.load(filename, map_location=device)
             key = [k for k in chkpt.keys() if "mask" in k][0]
-            if "SA" in key:  # if SA mask
+            if "heur" in key:  # if SA mask
                 apply_mask_from_vector(model, chkpt[key], device)
             else:
                 apply_mask_from_list(model, chkpt[key])
@@ -55,7 +55,7 @@ def plot_trainability(
         optimizer = optim.Adadelta(model.parameters(), lr=hp.lr)
         for epoch in range(hp.epochs):
             train(hp, model, device, train_loader, optimizer, epoch, writer,
-                    False)
+                    False, hp.k)
             test(None, model, device, test_loader)
         writer.close()
 
@@ -67,7 +67,8 @@ if __name__ == "__main__":
         lr = 1
         log_interval = 2
         epochs = 1
-        batch_size = 64
+        k = 500
+        batch_size = 100
         test_batch_size = 1000
 
     hp = HyperParams()
