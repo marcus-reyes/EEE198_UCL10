@@ -195,33 +195,33 @@ all criterions SA, SA_k, Magnitude (structured-LTH)[1], MagSign
 ### Main components
 1. `MLP_experiments/`
     1. [main_SA_MLP.py](MLP_experiments/main_SA_MLP.py) MLP masking for SA, SNIP, Deconst, and LTH
-    2. [utilities_MLP.py](utilities_MLP.py) for masking, SA, and top-level NN functions
-    3. [networks_MLP.py]() models used for MLP experiments
+    2. [utilities_MLP.py](MLP_experiments/utilities_MLP.py) for masking, SA, and top-level NN functions
+    3. [networks_MLP.py](MLP_experiments/networks_MLP.py) models used for MLP experiments
 2. For CNN masking:
-    1. [main_SA.py]()
-    2. [main_pruner_mag_rewind.py]()
-    3. [main_pruner_mag_sign_rewind.py]()
-    4. [main_pruner_random.py]()
-3. [actual_prune.py]()
-4. [train_actual_subnet.py]() [and trainer.py]()
+    1. [main_SA.py](main_SA.py)
+    2. [main_pruner_mag_rewind.py](main_pruner_mag_rewind.py)
+    3. [main_pruner_mag_sign_rewind.py](main_pruner_mag_sign_rewind.py)
+    4. [main_pruner_random.py](main_pruner_random.py)
+3. [actual_prune.py](actual_prune.py)
+4. [train_actual_subnet.py](train_actual_subnet.py) and [trainer.py](trainer.py) for training subnets and original full CNN, respectively
 5. Tools:
-    1. [environment.py]() model masking and top-level NN functions,
+    1. [environment.py](environment.py) model masking and top-level NN functions,
        re-used from [work on RL](github.com/prokorpio/everything_190)
-    2. [utilities.py]() SA loop functions, and PrunedSubnet class
-    3. [initializer.py]() generates init.pth files for uniform weight inits
+    2. [utilities.py](utilities.py) SA loop functions, and PrunedSubnet class
+    3. [initializer.py](initializer.py) generates init.pth files for uniform weight inits
        across experiments
-    4. [models_to_prune.py]()
+    4. [models_to_prune.py](models_to_prune.py)
 
 ### Analysis Scripts
 1. `MLP_experiments/`
-    1. [orthogonality_score.py]() computes OS, as per [5], of all MLP masks
-    2. [plot_mask_trainability.py]() runs tensorboard for observing
+    1. [orthogonality_score.py](MLP_experiments/orthogonality_score.py) computes OS, as per [5], of all MLP masks
+    2. [plot_mask_trainability.py](MLP_experiments/plot_mask_trainability.py) runs tensorboard for observing
        trainability in training loss plots
-    3. [orthogonality_repair.py]() explored weight orthogonality repair, as per
+    3. [orthogonality_repair.py](MLP_experiments/orthogonality_repair.py) explored weight orthogonality repair, as per
        [5]. Not included in paper.
-2. [main_var_script.py]() and [main_var_SA.py]() for SA similarity matrix
+2. [main_var_script.py](main_var_script.py) and [main_var_SA.py](main_var_SA.py) for SA similarity matrix
    experiments, saves files in paths different from that in `main_SA.py`
-3. [mask_similarities.py]() compute similarity matrix (works for both CNN and
+3. [mask_similarities.py](mask_similarities.py) compute similarity matrix (works for both CNN and
    MLP)
 
 
