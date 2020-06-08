@@ -31,20 +31,18 @@ towards the end of the process.
 To evaluate the performance of SA, we run the following experiments:
 
 1. <b>SA on CNN</b>
-    1. Mask Search on CNN
+    1. Mask Search on CNN    
         1. Randomly initialize the neural network (initialization w<sub>init</sub>)
         2. Train for K epochs (K within [0,90])
         3. Run SA search
         4. Save best mask found
-
     2. Actual Pruning CNN
         1. Load SA-found mask
         2. Load masks generated using other criterion
         3. Apply different masks on multiple network intances (with similar
            initializations w<sub>init</sub>)
         4. Prune: delete filters based on masks
-        5. Save pruned networks
-
+        5. Save pruned network
     3. Training Pruned CNN
         1. Load pruned networks
         2. Train networks for 90 epochs on CIFAR-10
@@ -56,7 +54,6 @@ To evaluate the performance of SA, we run the following experiments:
     Similar steps are followed as above, but without actual pruning.
 
 3. <b>Additional Analysis</b>
-
     1. Orthogonality scores and training loss plots on MLP. To shed light on the
        disconnect between high untrained performance yet subpar final (trained)
        performance.
@@ -84,7 +81,7 @@ To evaluate the performance of SA, we run the following experiments:
     <p align="center">
     <img src="./sample_plots/MLP.png" height="280"><br/>
     </p>
-    
+
     We observe three things from the table above: (1) Across sparsities, SA and
     Random are consistently the bottom two compared to the rest of the other
     criteria. (2) The achieved optimized accuracy of SA on the validation set
@@ -162,7 +159,14 @@ To evaluate the performance of SA, we run the following experiments:
 
 ## Getting Started
 
-1. Run `setup.py` to install library dependencies. (I'll [add](https://python-packaging.readthedocs.io/en/latest/dependencies.html))
+1. Install library dependencies.
+
+    * `torch 1.5.0`
+    * `torchvision 0.6.0`
+    * `tensorboard 2.1.0`
+    * `numpy 1.17.4`
+    * `pandas 1.0.1`
+
 
 2. For MLP experiments, run:
 ```bash
@@ -190,8 +194,8 @@ all criterions SA, SA_k, Magnitude (structured-LTH)[1], MagSign
 
 ### Main components
 1. `MLP_experiments/`
-    1. [main_SA_MLP.py]() MLP masking for SA, SNIP, Deconst, and LTH
-    2. [utilities_MLP.py]() for masking, SA, and top-level NN functions
+    1. [main_SA_MLP.py](main_SA_MLP.py) MLP masking for SA, SNIP, Deconst, and LTH
+    2. [utilities_MLP.py](utilities_MLP.py) for masking, SA, and top-level NN functions
     3. [networks_MLP.py]() models used for MLP experiments
 2. For CNN masking:
     1. [main_SA.py]()
