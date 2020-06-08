@@ -15,7 +15,7 @@ inspiration from recent works on lottery tickets
 the process of finding high performing and high sparsity subnetworks (winning 
 tickets), without relying on already trained networks. This form of compression
 allows for memory and energy savings in training neural networks. After our 
-initial attempt of using an [RL agent](github.com/prokorpio/everything_190) to 
+initial attempt of using an [RL agent](https://www.github.com/prokorpio/everything_190) to 
 search for these subnetworks, we resolved to using a simpler approach based on 
 the heuristic search algorithm, Simulated Annealing (SA). 
 
@@ -70,10 +70,10 @@ To evaluate the performance of SA, we run the following experiments:
 
 ### MLP Experiments
 1. <b>Sample plot of SA search</b>  
-    <img src="./sample_plots/seed_45_SA_plot_k0_90sparse.svg">
+    <img src="./sample_plots/seed_45_SA_plot_k0_90sparse.svg" height="300">
     The plot above shows in red the estimated performance of masks tried by SA
-    throughout its search process. This specific run prunes 70% of the weights,
-    and the estimated performance is taken with only n-epoch training. Shown in
+    throughout its search process. This specific run prunes 90% of the weights,
+    and the estimated performance is taken at initialization (k=0). Shown in
     blue is the relative hamming distance of masks tested, experimentally
     tuned, and serves to increasingly limit the neighborhood of the search
     space.  
@@ -119,9 +119,9 @@ To evaluate the performance of SA, we run the following experiments:
 
 ### CNN Experiments
 1. <b>Sample plot of SA search</b>  
-    <img src="./sample_plots/ave_acc_CNN_k90_50sparse.svg">
+    <img src="./sample_plots/ave_acc_CNN_k90_50sparse.svg" height="300">
     Similar as the plot for CNN; this one shows SA on CNN, selecting
-    only 70% of filters. 
+    only 50% of filters, at k=90. 
 
 2. <b>Criterion Comparison</b>  
     <insert table 5.8 from paper>  
