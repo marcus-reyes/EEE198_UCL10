@@ -206,7 +206,7 @@ all criterions SA, SA_k, Magnitude (structured-LTH)[1], MagSign
 4. [train_actual_subnet.py](train_actual_subnet.py) and [trainer.py](trainer.py) for training subnets and original full CNN, respectively
 5. Tools:
     1. [environment.py](environment.py) model masking and top-level NN functions,
-       re-used from [work on RL](github.com/prokorpio/everything_190)
+       re-used from [work on RL](https://www.github.com/prokorpio/everything_190)
     2. [utilities.py](utilities.py) SA loop functions, and PrunedSubnet class
     3. [initializer.py](initializer.py) generates init.pth files for uniform weight inits
        across experiments
