@@ -5,6 +5,10 @@
 This codebase was developed by Jeff Sanchez and Marcus Reyes for during
 their senior-year project; UCL, UP-Diliman 2020.
 
+To request for the official thesis paper, please email either of the following:
+* [christopher.jeff.sanchez@eee.upd.edu.ph](mailto:christopher.jeff.sanchez@eee.upd.edu.ph)
+* [marcus.joseph.reyes@eee.upd.edu.ph](mailto:marcus.joseph.reyes@eee.upd.edu.ph)  
+* [rowel@eee.upd.edu.ph](mailto:rowel@eee.upd.edu.ph)
 
 ## Background
 
@@ -39,7 +43,7 @@ To evaluate the performance of SA, we run the following experiments:
     2. Actual Pruning CNN
         1. Load SA-found mask
         2. Load masks generated using other criterion
-        3. Apply different masks on multiple network intances (with similar
+        3. Apply different masks on multiple network instances (with similar
            initializations w<sub>init</sub>)
         4. Prune: delete filters based on masks
         5. Save pruned network
